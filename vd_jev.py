@@ -176,7 +176,7 @@ def _http_error_message(e):
         message = json.loads(e.read().decode('utf-8'))['error']['message']
     except Exception:
         message = e.reason
-    return f'OpenRouter returned HTTP {e.code}: {str(message).rstrip(".")}'
+    return f'request failed with HTTP {e.code}: {str(message).rstrip(".")}'
 
 
 def _retry_delay(e, attempt):
@@ -209,7 +209,7 @@ def jev_send(body, api_key, url, timeout, retries=3):
         except TimeoutError as e:
             raise JevError(f'no answer from OpenRouter within {timeout}s') from e
         except json.JSONDecodeError as e:
-            raise JevError('OpenRouter answer is not JSON') from e
+            raise JevError('answer from OpenRouter is not JSON') from e
 
 
 def _float_or_none(x):

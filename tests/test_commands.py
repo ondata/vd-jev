@@ -108,7 +108,7 @@ def test_error_row(jev):
     jev.reply({'error': {'message': 'boom'}}, status=500)
     cols = ask(textsheet('a', 'b'))
     assert cols['text_noul'] == [None, 0.1]
-    assert cols['text_noul_raw'][0] == 'error: OpenRouter returned HTTP 500: boom'
+    assert cols['text_noul_raw'][0] == 'error: request failed with HTTP 500: boom'
     assert jev.statuses[-1] == 'jev noul: 1 rows answered, 0 skipped (empty), 1 errors, 0.000010 USD'
 
 
@@ -203,5 +203,5 @@ def test_refused_key_stops_the_run(jev, status, message, hint):
     ask(sheet)
     time.sleep(0.3)  # nothing else may arrive late
     assert len(jev.requests) == 1
-    assert jev.warnings[-1] == f'stopped: OpenRouter returned HTTP {status}: {message.rstrip(".")}; {hint}'
+    assert jev.warnings[-1] == f'stopped: request failed with HTTP {status}: {message.rstrip(".")}; {hint}'
     assert jev.statuses[-1] == 'jev noul: 0 rows answered, 0 skipped (empty), 1 errors, 0.000000 USD'

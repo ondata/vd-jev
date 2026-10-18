@@ -202,19 +202,19 @@ def test_retries_exhausted(fakejev, nosleep):
 
 def test_http_error_message(fakejev):
     fakejev.reply({'error': {'message': 'No cookie auth credentials found', 'code': 401}}, status=401)
-    with pytest.raises(JevError, match='OpenRouter returned HTTP 401: No cookie auth credentials found'):
+    with pytest.raises(JevError, match='request failed with HTTP 401: No cookie auth credentials found'):
         jev_send({}, 'bad', fakejev.url, timeout=5)
 
 
 def test_http_error_without_json_body(fakejev):
     fakejev.reply(b'<html>bad gateway</html>', status=502)
-    with pytest.raises(JevError, match='OpenRouter returned HTTP 502: Bad Gateway'):
+    with pytest.raises(JevError, match='request failed with HTTP 502: Bad Gateway'):
         jev_send({}, 'k', fakejev.url, timeout=5)
 
 
 def test_non_json_answer(fakejev):
     fakejev.reply(b'not json')
-    with pytest.raises(JevError, match='OpenRouter answer is not JSON'):
+    with pytest.raises(JevError, match='answer from OpenRouter is not JSON'):
         jev_send({}, 'k', fakejev.url, timeout=5)
 
 
