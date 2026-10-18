@@ -3,3 +3,9 @@ id	district	message	message_score	message_score_conf
 2	Central	Please add a bench near the duck pond in Riverside Park.	2.00	0.80
 3	East	The bar on Market Square plays loud music until 3am every night.	1.00	0.80
 4	West			
+5	South	Large pothole on Main Street near the school; cars swerve into the other lane to avoid it.	0.00	0.80
+6	North	Broken glass is scattered across the playground in Maple Park.	2.00	0.80
+7	Central	Road works on King Street start at 5am and wake the whole block.	1.00	0.80
+8	East	Could you repaint the faded lane markings on Oak Avenue?	2.00	0.80
+9	West	The grass in Lincoln Park has not been mowed in a month.	2.00	0.80
+10	South	A streetlight on the path through Central Park has been out for a week.	2.00	0.80

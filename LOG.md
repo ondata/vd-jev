@@ -2,6 +2,7 @@
 
 ## 2026-10-18
 
+- Cursor now stays on the source column after `jev-column` (test first, failed, then fixed). Demo extended to 10 rows. VHS recording `demo/demo.gif` from `demo/demo.tape`. README rewritten with GIF, usage, costs (Jev ~0.000012 USD/row, Perplexity Decider Flash ~0.000001), privacy, options.
 - Guided manual test with the user passed (noul, choice, frequency table, score, selection of the uncertain row). UX finding: cursor moves to the new column, so the next question was asked on `message_choice` by mistake.
 - Phase 4, real calls on the demo (Jev 1.14, Decisions API): hazard 0.97 / 0.04 / 0.16; department `roads` 0.98 / `parks` 1.00 / `noise` 1.00; urgency 1.96 (conf 0.94) / 0.11 (0.85) / 0.91 (0.19) for tree / bench / bar; empty row skipped. The bar's urgency is the uncertain case to show.
 - Guide for the manual test verified as `tests/guide-nosave.vdx`; `go-col-regex` searches forward and `select-expr` lets empty cells pass `< x`.

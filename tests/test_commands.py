@@ -156,3 +156,11 @@ def test_execstr_compiles(longname):
     cmd = visidata.Sheet('x').getCommand(longname)
     compile(cmd.execstr, longname, 'exec')
     assert 'input' in cmd.execstr
+
+
+def test_cursor_stays_on_source_column(jev):
+    'So that several questions can be asked in a row without moving back to the text column.'
+    sheet = textsheet('abc')
+    sheet.cursorVisibleColIndex = 0
+    ask(sheet, 'q?', 'roads, parks')
+    assert sheet.cursorCol.name == 'text'

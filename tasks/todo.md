@@ -64,9 +64,11 @@ Decided with the user on 2026-10-18: the question type comes from what the user 
 
 - [x] Create `aborruso/vd-jev` on GitHub (private) and push → check: `gh repo view` shows it private, `main` pushed
   - Done 2026-10-18, see LOG.
-- [ ] VHS recording (`demo/demo.tape` -> `demo/demo.gif`, VHS v0.11.0 installed in `~/go/bin`, ttyd and ffmpeg present): `vd demo/city_requests.csv`, `jev-column` with one question, the new columns, then `Shift+F` on the choice column or a sort by confidence; real calls on 3 rows (~0.00004 USD per take); every key in the tape checked in the VisiData source or by replay first → check: `vhs demo/demo.tape` produces the GIF; user reviews it
+- [x] VHS recording (`demo/demo.tape` -> `demo/demo.gif`, VHS v0.11.0 installed in `~/go/bin`, ttyd and ffmpeg present): `vd demo/city_requests.csv`, `jev-column` with one question, the new columns, then `Shift+F` on the choice column or a sort by confidence; real calls on 3 rows (~0.00004 USD per take); every key in the tape checked in the VisiData source or by replay first → check: `vhs demo/demo.tape` produces the GIF; user reviews it
+  - Recorded 2026-10-18 on the 10-row demo (extended with the user's agreement): 27 s, 1.4 MB; frames checked: noul summary 9 answered / 1 skipped / 0.000109 USD, form with both fields, frequency table roads 4 / parks 4 / noise 1, 5 uncertain rows selected. The narrow `~` column after the last visible one is VisiData 3.4 drawing hidden columns (`calcColLayout` lays out `availCols`, hidden ones 1 char wide), not a plugin bug. Waiting for the user's review.
 - [ ] Make `aborruso/vd-jev` public, after explicit user confirmation → check: repo visible logged out, README renders
-- [ ] README with `uv tool` install, examples, indicative costs, how to choose another model with `jev_model`, and a note that cell text is sent to OpenRouter and the model provider (TypeSafe, USA, for Jev)
+- [x] README with `uv tool` install, examples, indicative costs, how to choose another model with `jev_model`, and a note that cell text is sent to OpenRouter and the model provider (TypeSafe, USA, for Jev)
+  - Done 2026-10-18: GIF at the top, usage table, install from git (checked with `git+file://` in `tmp/gitvenv`: plugin loads), model choice, measured costs, privacy, options, tests.
 
 ## After v1 (not in this plan)
 

@@ -218,6 +218,8 @@ def jevAsk(sheet, col, rows, question='', answers=''):
     rawcol = SettableColumn(f'{col.name}_{kind}_raw', type=str, width=0)  # hidden
     newcols.append(rawcol)
     sheet.addColumnAtCursor(*newcols)
+    if col in sheet.visibleCols:  # stay on the text column, ready for the next question
+        sheet.cursorVisibleColIndex = sheet.visibleCols.index(col)
 
     sheet.jevRun(todo, q, api_key, len(rows)-len(todo), valuecol, confcol, rawcol)
 

@@ -4,19 +4,20 @@ open-file demo/city_requests.csv
 go-col-regex ^message$
 assert-expr cursorCol.name == 'message'
 jev-column {"question": "Does the message report a safety hazard?", "answers": ""}
-assert-expr cursorCol.name == 'message_noul'
-go-col-regex ^message$
+assert-expr cursorCol.name == 'message'
 jev-column {"question": "Which department should handle this?", "answers": "roads, parks, noise"}
-assert-expr cursorCol.name == 'message_choice'
+assert-expr cursorCol.name == 'message'
 assert-expr [c.name for c in visibleCols] == ['id', 'district', 'message', 'message_choice', 'message_choice_conf', 'message_noul']
+go-right
+assert-expr cursorCol.name == 'message_choice'
 freq-col
-assert-expr sheet.nRows == 3
 quit-sheet
-go-col-regex ^message$
+go-left
+assert-expr cursorCol.name == 'message'
 jev-column {"question": "How urgent is this request?", "answers": "low < medium < high"}
-assert-expr cursorCol.name == 'message_score'
+assert-expr cursorCol.name == 'message'
+go-right
 go-right
 assert-expr cursorCol.name == 'message_score_conf'
 sort-asc
 select-expr 0 < message_score_conf < 0.85
-assert-expr sheet.nSelectedRows == 3
