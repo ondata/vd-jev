@@ -35,7 +35,7 @@ vd-jev is a VisiData plugin that asks closed questions about every cell of a tex
 
 Goals for v1:
 
-- Three commands, `noul`, `choice` and `score`, each runnable over the whole current column or over the selected rows only.
+- Three question types, `noul`, `choice` and `score`, through two commands (`jev-column`, `jev-selected`) and one prompt: the type comes from what the user writes in `answers`.
 - Typed result columns that VisiData can sort, filter, aggregate and use in frequency tables right away.
 - Calibrated confidence exposed as a column, so users can filter or select low-confidence rows for manual review.
 - Spend awareness: confirmation above a row threshold, and a final summary with rows processed, rows skipped, errors and total cost in USD.
@@ -64,17 +64,22 @@ After running a command, the user sorts by confidence, opens a frequency table o
 
 ### Commands
 
-Six commands, no default key bindings (same choice as `experimental/llm.py`), reachable with `Space` + command name and from the menu `Column > Jev`.
+Two commands, no default key bindings (same choice as `experimental/llm.py`), reachable with `Space` + command name and from the menu `Column > Jev`:
 
-| Command | Rows | Prompts |
-|---|---|---|
-| `jev-noul-column` / `jev-noul-selected` | all / selected | question |
-| `jev-choice-column` / `jev-choice-selected` | all / selected | question, then labels separated by commas |
-| `jev-score-column` / `jev-score-selected` | all / selected | question, then levels from lowest to highest, separated by commas |
+| Command | Rows |
+|---|---|
+| `jev-column` | all rows |
+| `jev-selected` | selected rows |
 
-VisiData allows one `input()` per command (`dev/STYLE.md`), so `choice` and `score` ask for the question and the labels in a single `vd.inputMultiple` prompt with two fields, as `features/regex.py` does for search and replace.
+Both open one prompt with two fields (VisiData allows one `input()` per command, `dev/STYLE.md`, so it is a `vd.inputMultiple` form, as `features/regex.py` does for search and replace):
 
-The `*-selected` variants use `someSelectedRows`, which fails with `no rows selected` when nothing is selected.
+- `question`: the closed question, required.
+- `answers`: optional; it sets the question type, as the named argument does in MotherDuck's `prompt_jev()`:
+  - empty: `noul`, a probability that the statement is true;
+  - `roads, parks, noise`: `choice`, one label from the list;
+  - `low < medium < high`: `score`, a position on the ordered scale, lowest first.
+
+`jev-selected` fails with `no rows selected` when nothing is selected.
 
 Validation before any request:
 
@@ -167,10 +172,12 @@ vd-jev/
   vd_jev.py               # the plugin: options, Jev client, commands, menu
   tests/
     test_client.py        # pytest on the pure functions: request building, answer parsing, no network
+    test_commands.py      # in-process tests of the commands
+    test_vdx.py           # runs every *.vdx in batch, compares with golden/
     *.vdx                 # batch replay tests of the commands
+    golden/               # expected saved sheets
   demo/
-    city_requests.csv     # didactic dataset (see below)
-    expected.csv          # correct answers for the dataset
+    city_requests.csv     # tiny didactic dataset (see below)
   README.md
   LOG.md
   PRD.md
@@ -207,20 +214,16 @@ The current list is in `$(uv tool dir)/visidata/uv-receipt.toml`; check it befor
 <a id="dataset"></a>
 ## Demo dataset
 
-A hand-built English CSV, `demo/city_requests.csv`, designed to teach the three question types with examples anyone can follow. It doubles as a small accuracy check, because every row has a known answer in `demo/expected.csv`.
+`demo/city_requests.csv` is deliberately tiny: three columns (`id`, `district`, `message`) and four rows, messages that residents send to a city's service desk, one of them empty. Its job is to show what the plugin is for, not to measure Jev:
 
-Theme: messages that residents send to a city's service desk. About 40 rows, columns `id`, `district`, `submitted` (date), `message`.
+- `noul` - "Does the message report a safety hazard?": a fallen tree blocking a road against a request for a bench.
+- `choice` - "Which department should handle this?" with `roads, parks, noise`.
+- `score` - "How urgent is this?" with `low < medium < high`.
+- The empty message shows that empty cells are skipped.
 
-The messages are written so that each command has something clear to show:
+After each question the answers are ordinary VisiData columns: a frequency table on the chosen label, a sort by confidence, a selection of the uncertain rows to read by hand.
 
-- `noul` - "Does the message report a safety hazard?": clear yes (exposed wires, a fallen tree on the road), clear no (a request for a new bench), and a few borderline cases.
-- `choice` - "Which department should handle this?" with `roads, waste, parks, noise, lighting`: several clear messages per department, plus a few that touch two departments (a broken streetlight in a park) to show lower confidence.
-- `score` - "How urgent is this request?" with `low, medium, high`: a spread across the scale.
-- A few empty messages, to show that empty cells are skipped.
-
-`demo/expected.csv` holds, for each `id`, the expected `hazard` (true/false), `department` and `urgency`. A comparison (with `duckdb` or a VisiData join) gives accuracy per question type. Being written by the same person who sets the labels, this set is easier than real data; it shows how the plugin works, not how well Jev performs on real text.
-
-For volume tests (confirmation threshold, concurrency, progress, cancellation) a larger file is generated with `fauxdata` from a YAML schema in `tmp/`. Its text is random, so it is used only to check behaviour, never accuracy.
+Measuring accuracy on real data (ANAC, data.europa.eu) is left for after v1 (see Open questions).
 
 <a id="testing"></a>
 ## Testing
@@ -228,8 +231,9 @@ For volume tests (confirmation threshold, concurrency, progress, cancellation) a
 - **One entry point**: `uv run pytest` runs unit tests and `.vdx` replays; GitHub Actions runs it on Python 3.10 to 3.14.
 - **Unit tests** (`pytest`, no network): request body for each question type, label and level validation, parsing of each answer type; `send()` against a loopback `http.server` that plays scripted answers (`429`, errors, timeouts, malformed bodies), the same approach as VisiData's `tests/test-url.sh`.
 - **Live smoke test**: one real request per question type on a fixed sentence, marked `live` and skipped by default; run by hand with `uv run pytest -m live`, never in CI, since it costs money.
-- **VisiData batch replay**: `.vdx` command logs (format and `assert-expr` / `assert-cell` as in `saulpw/visidata/tests/*.vdx`) run with `vd -b --config /dev/null -p test.vdx demo/city_requests.csv -o out.csv`, then checked with `duckdb`: result columns present, typed, values in range, empty cells skipped. This is the main integration test.
-- **Accuracy check**: compare the output of each command on `demo/city_requests.csv` with `demo/expected.csv`; record results in `LOG.md`.
+- **VisiData batch replay**: `.vdx` command logs (format and `assert-expr` / `assert-cell` as in `saulpw/visidata/tests/*.vdx`) run in batch from pytest with `--config /dev/null`, against the loopback server; the saved sheet is compared with a golden file. This is the main integration test.
+- **In-process command tests**, as `visidata/tests/test_llm.py` does: status counts, confirmation in the main thread, missing key, empty selection.
+- **Golden files**: `.vdx` replays against the loopback server save their sheet, compared with `tests/golden/`.
 - **Guided interactive test** with the user, on a step-by-step guide whose every step was checked beforehand (key bindings verified in the VisiData source or by replay).
 
 <a id="privacy"></a>
@@ -246,7 +250,7 @@ The detailed checklist, with a verification for every step, is in [`tasks/todo.m
 1. Repo skeleton, packaging, install into VisiData's environment.
 2. `client.py` with unit tests and a live smoke test.
 3. VisiData commands, tested by batch replay.
-4. Demo dataset, accuracy check, guided interactive test.
+4. Real calls on the demo dataset, guided interactive test.
 5. README and publication on GitHub as `aborruso/vd-jev`.
 
 <a id="open-questions"></a>

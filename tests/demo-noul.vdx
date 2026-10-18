@@ -1,0 +1,5 @@
+# yes/no question: empty answers, one probability per row; the empty message is skipped
+# answers come from the loopback fake in tests/conftest.py (deterministic_answer), not from Jev
+open-file demo/city_requests.csv
+col message
+jev-column {"question": "Does the message report a safety hazard?", "answers": ""}

@@ -7,7 +7,7 @@ A VisiData plugin that brings the ideas of MotherDuck's `prompt_jev()` into Visi
 - Engine: Jev via OpenRouter, `POST https://openrouter.ai/api/v1/systemone`, key in `OPENROUTER_API_KEY`. Checked with a real call: an Italian tender description returned `choice` = `lavori` (p=1), `noul` urgency = 0.09, cost 0.000016 USD.
 - Repo: `~/git/vd-jev`, on GitHub as `aborruso/vd-jev`. Changed 2026-10-18 at the user's request: created private at the end of phase 1, made public in phase 5 once the plugin works.
 - Language: everything in the repo is in English, this plan included: code, comments, README, LOG, commit messages.
-- v1 scope: `noul`, `choice` and `score` questions on text, over the whole column or the selected rows only. Out of scope: `box`, images, `multiple_choice`.
+- v1 scope: `noul`, `choice` and `score` questions on text, over the whole column or the selected rows only, through two commands; the type comes from the `answers` field. Out of scope: `box`, images, `multiple_choice`.
 - Style reference: `visidata/experimental/llm.py` from VisiData 3.4, plus the official plugin docs: `docs/api/plugins.rst`, `docs/plugins.md`, `dev/STYLE.md`, `dev/TESTING.md` in `saulpw/visidata`, and the `visidata/visidata-plugin` template (copies in `tmp/vd-docs/`).
 - Distribution and layout (2026-10-18, from the official docs): a pip package with a `visidata.plugins` entry point, the route `docs/plugins.md` describes. The `visidata/dlc` registry and `plugins-sheet` are dead in 3.4 (`plugins_url` commented out in `visidata/deprecated.py`, `dlc` last commit 2022-03-12). The plugin is a single file, `vd_jev.py` (docstring, `__author__`, `__version__`, options at the top, commands at the bottom), as `docs/api/plugins.rst` and `experimental/llm.py` do: the same file can be pip-installed, copied into the VisiData `plugins/` directory, or proposed upstream under `experimental/`.
 - Dependencies (2026-10-18, changed): the plugin must run on a base VisiData install (`uv tool install visidata`, no extras) and add only what it strictly needs. Base VisiData 3.4 requires only `python-dateutil` (plus `standard-mailcap` on Python >= 3.13 and `windows-curses` on Windows); `requests` comes only with the `[all]` extra. HTTP is therefore done with the standard library (`urllib.request`, `json`, `concurrent.futures`): no runtime dependencies. The user's own extras stay on their machine but are never assumed by the plugin.
@@ -39,21 +39,23 @@ A VisiData plugin that brings the ideas of MotherDuck's `prompt_jev()` into Visi
 
 ## Phase 3 - VisiData commands
 
-Test file for this phase: `demo/city_requests.csv` (see PRD, Demo dataset). For volume tests only (confirmation threshold, concurrency, cancellation), a larger file generated with `fauxdata` in `tmp/`: its text is random, so it never measures accuracy.
+Decided with the user on 2026-10-18: the question type comes from what the user types, as in MotherDuck's `prompt_jev()`, so two commands instead of six; the demo is a handful of rows that shows what the plugin is for, not an accuracy benchmark; no large volume file (the confirmation threshold is tested on a synthetic sheet in pytest). The 40-row draft and `tmp/volume.csv` are dropped.
 
-- [ ] Write `demo/city_requests.csv` (~40 rows, English, a few empty messages) and `demo/expected.csv` (hazard, department, urgency per id); user reviews both → check: user approves; `duckdb` join on `id` matches every row
-- [ ] Generate `tmp/volume.csv` (1,000 rows) with `fauxdata generate --validate` → check: validation passes
-
-- [ ] `jev-noul-column` / `jev-noul-selected`: asks for the question, adds a `<col>_noul` column (float) → check: batch `.vdx` replay on the test file, column present, values between 0 and 1
-- [ ] `jev-choice-column` / `-selected`: asks for the question and comma-separated labels in one `vd.inputMultiple` prompt (STYLE.md: one `input()` per command; pattern from `features/regex.py`), wrapped in an `inputJev...()` helper kept in the execstr; adds `<col>_choice` (str), `<col>_confidence` (float), `<col>_jev_raw` (JSON, hidden) → check: batch replay, every `choice` is one of the given labels
-- [ ] `jev-score-column` / `-selected`: asks for the question and levels from lowest to highest in one `vd.inputMultiple` prompt; adds `<col>_score` (float), `<col>_confidence` → check: batch replay, `score` between 0 and n-1
-- [ ] Empty cells skipped, confirmation above the row threshold, `Progress` bar, final summary with rows, errors and cost (`usage.cost`) → check: replay on a file with empty cells; summary counts are correct
-- [ ] Menu entries under Column > Jev → check: visible in the menu
+- [ ] Write `demo/city_requests.csv`: 3 columns (`id`, `district`, `message`), 4 rows, one with an empty message → check: user approves it
+  - Written 2026-10-18 (fallen tree, bench request, loud bar, empty); waiting for the user's approval.
+- [x] `jev_parse_answers()`: empty → `noul`; `a, b, c` → `choice`; `low < medium < high` → `score` → check: unit tests for each form and for invalid input
+  - Done 2026-10-18, `test_parse_answers*` in `tests/test_client.py`.
+- [x] `jev-column` / `jev-selected`: one `vd.inputMultiple` prompt with `question` and `answers` (STYLE.md: one `input()` per command; pattern from `features/regex.py`), through an `inputJev()` helper kept in the execstr; question built, key read and confirmation asked in the main thread, requests in an `@asyncthread` with a thread pool of `jev_concurrency`; adds `<col>_noul` (float), or `<col>_choice` (str) + `<col>_choice_conf` (float), or `<col>_score` (float) + `<col>_score_conf` (float), plus a hidden `<col>_<type>_raw` → check: `.vdx` replays on `demo/city_requests.csv` against the loopback server, output compared with golden files in `tests/golden/` (as VisiData does); `choice` is one of the labels, `score` between 0 and n-1, `noul` between 0 and 1
+  - Done 2026-10-18. `tests/demo-{noul,choice,score,selected}.vdx` replayed by `tests/test_vdx.py` against the loopback server (`--jev-api-url=URL`: the option needs `=`, with a space VisiData opens the URL as a file), output equal to `tests/golden/*.tsv`; the hidden raw column is not saved; the empty message stays empty; `jev-selected` answers only the selected row.
+- [x] Empty cells skipped, confirmation above `jev_confirm_rows`, `Progress`, final status with rows answered, skipped, errors and cost (`usage.cost`), per-row errors kept in the raw column, cancellation with Ctrl+C stops pending requests → check: in-process pytest (as `visidata/tests/test_llm.py`): counts in the status, confirm called once in the main thread above the threshold, missing key fails before any column is added, `jev-selected` with no selection fails
+  - Done 2026-10-18, `tests/test_commands.py` (14 tests, incl. cancellation: with 10 slow requests and concurrency 1, `vd.cancelThread` stops the run before all are sent; the partial summary is posted, then VisiData's `jevRun aborted`). In batch the final status is not printed to stdout, so the summary is checked in-process only.
+- [x] Menu entries under Column > Jev → check: pytest on `vd.menus` (TESTING.md: Python-level assertions with no output go in pytest, not `.vdx`; changed 2026-10-18)
+  - Done 2026-10-18, `test_menu` and `test_execstr_compiles` in `tests/test_commands.py`.
 
 ## Phase 4 - Field test
 
-- [ ] Run `jev-noul`, `jev-choice`, `jev-score` on `demo/city_requests.csv` and compare with `demo/expected.csv` → check: accuracy per question type and low-confidence rows recorded in `LOG.md`
-- [ ] Guided interactive test with the user, step by step, on a guide whose every step was verified beforehand
+- [ ] Run the three kinds of question on `demo/city_requests.csv` with real calls → check: answers and cost recorded in `LOG.md`
+- [ ] Guided interactive test with the user in their shell, step by step, on a guide whose every step was verified beforehand
 
 ## Phase 5 - Publication
 

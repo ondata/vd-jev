@@ -1,0 +1,5 @@
+id	district	message	message_score	message_score_conf
+1	North	A tree has fallen across Elm Street after the storm and blocks both lanes.	2.00	0.80
+2	Central	Please add a bench near the duck pond in Riverside Park.	2.00	0.80
+3	East	The bar on Market Square plays loud music until 3am every night.	1.00	0.80
+4	West			

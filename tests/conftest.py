@@ -11,6 +11,7 @@ class FakeJev:
 
     def __init__(self):
         self.replies = []    # list of (status, headers, body, delay); body is a dict or bytes
+        self.responder = None  # if set, called with the request body when no scripted reply is left
         self.requests = []   # list of dict(path, headers, body)
         fake = self
 
@@ -19,7 +20,10 @@ class FakeJev:
                 length = int(self.headers.get('Content-Length', 0))
                 fake.requests.append(dict(path=self.path, headers=dict(self.headers),
                                           body=json.loads(self.rfile.read(length))))
-                status, headers, body, delay = fake.replies.pop(0)
+                if fake.replies:
+                    status, headers, body, delay = fake.replies.pop(0)
+                else:
+                    status, headers, body, delay = fake.responder(fake.requests[-1]['body'])
                 if delay:
                     time.sleep(delay)
                 if isinstance(body, dict):
@@ -47,6 +51,22 @@ class FakeJev:
     def close(self):
         self.server.shutdown()
         self.server.server_close()
+
+
+def deterministic_answer(body):
+    'A plausible Jev reply that depends only on the request, so parallel runs give the same output.'
+    question = body['questions']['answer']
+    n = len(body['state'])
+    if question['type'] == 'noul':
+        answer = {'type': 'noul', 'noul': round((n % 10) / 10, 2)}
+    elif question['type'] == 'choice':
+        labels = list(question['criteria'])
+        pick = labels[n % len(labels)]
+        answer = {'type': 'choice', 'choice': pick, 'probabilities': {l: (0.9 if l == pick else 0.1 / (len(labels)-1)) for l in labels}, 'confidence': 0.9}
+    else:
+        levels = question['criteria']
+        answer = {'type': 'score', 'score': float(n % len(levels)), 'legend': {str(i): l for i, l in enumerate(levels)}, 'confidence': 0.8}
+    return 200, {}, {'answers': {'answer': answer}, 'usage': {'cost': 0.00001}}, 0
 
 
 @pytest.fixture

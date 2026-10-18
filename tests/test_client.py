@@ -3,7 +3,7 @@ import json
 import pytest
 
 import vd_jev
-from vd_jev import JevError, jev_build_question, jev_build_request, jev_parse_answer, jev_parse_labels, jev_send
+from vd_jev import JevError, jev_build_question, jev_build_request, jev_parse_answer, jev_parse_answers, jev_send
 
 NOUL = {'type': 'noul', 'noul': 0.09}
 CHOICE = {'type': 'choice', 'choice': 'roads', 'probabilities': {'roads': 0.9, 'parks': 0.1}, 'confidence': 0.8}
@@ -18,10 +18,23 @@ def response(answer, cost=0.000016):
 
 # labels and questions
 
-def test_parse_labels():
-    assert jev_parse_labels(' roads, waste ,,parks ') == ['roads', 'waste', 'parks']
-    assert jev_parse_labels('') == []
-    assert jev_parse_labels(None) == []
+@pytest.mark.parametrize('text, expected', [
+    ('', ('noul', [])),
+    ('   ', ('noul', [])),
+    (None, ('noul', [])),
+    ('roads, parks , noise', ('choice', ['roads', 'parks', 'noise'])),
+    ('low < medium<high', ('score', ['low', 'medium', 'high'])),
+    ('roads,,parks', ('choice', ['roads', '', 'parks'])),  # the empty label is rejected later
+])
+def test_parse_answers(text, expected):
+    assert jev_parse_answers(text) == expected
+
+
+def test_parse_answers_then_validate():
+    with pytest.raises(JevError, match='empty label'):
+        jev_build_question('choice', 'q', jev_parse_answers('roads,,parks')[1])
+    with pytest.raises(JevError, match='score needs at least 2 labels'):
+        jev_build_question('score', 'q', jev_parse_answers('high <')[1][:1])
 
 
 def test_noul_question():

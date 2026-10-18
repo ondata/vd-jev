@@ -1,0 +1,5 @@
+# pick one label: comma-separated answers
+# answers come from the loopback fake in tests/conftest.py (deterministic_answer), not from Jev
+open-file demo/city_requests.csv
+col message
+jev-column {"question": "Which department should handle this?", "answers": "roads, parks, noise"}
