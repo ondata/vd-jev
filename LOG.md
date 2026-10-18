@@ -2,6 +2,7 @@
 
 ## 2026-10-18
 
+- Release v0.1.0 on `79f5736` (https://github.com/ondata/vd-jev/releases/tag/v0.1.0); install from the tag checked in a clean venv. Announcement draft for the VisiData "Show and tell" discussions kept outside the repo, install line pinned to `@v0.1.0`.
 - Python 3.9 supported, as VisiData is: `requires-python >= 3.9`, 3.9 added to CI. Running the suite on 3.9 found a real bug: a read timeout raises `socket.timeout`, which is not `TimeoutError` before 3.10, so it escaped as a generic error; now caught.
 - README Quick start: step-by-step tour on the small demo file, opened from its GitHub raw URL; keys checked in the VisiData 3.4 source (`Space`, `c`, `Tab`, `Shift+F`, `q`, `h`/`l`, `[`, `z|`, `Ctrl+S`, `gv`, `Alt+c`, `Ctrl+Q`) and the sequence covered by `tests/guide-nosave.vdx`.
 - `ondata/vd-jev` is public. Install from GitHub checked in a clean venv.
