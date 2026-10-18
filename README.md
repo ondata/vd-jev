@@ -17,6 +17,7 @@ It brings to VisiData the idea behind MotherDuck's [`prompt_jev()`](https://moth
 - [Installation](#installation)
 - [What it does](#what-it-does)
 - [A real example: EU public procurement](#ted)
+- [A larger test: EU research projects](#cordis)
 - [Choosing a model](#choosing-a-model)
 - [Cost](#cost)
 - [Privacy](#privacy)
@@ -181,6 +182,30 @@ other (charities, foundations, private companies, anything else)
 | Health, expected `hospital or health service` | 66 | 28 (42%) | 56 (85%) |
 
 The education and training boards moved from `municipality or local government` to `school or university` (35 rows), and the Health Service Executive from `national ministry or agency` to `hospital or health service` (28 rows). The descriptions name kinds of organisations, not the buyers in the file. Scripts: `demo/ted_questions.py`, `demo/ted_descriptions.py`.
+
+<a id="cordis"></a>
+## A larger test: EU research projects
+
+`demo/cordis_sample.csv` holds 1,000 random Horizon 2020 projects, each with its objective in English (a paragraph, about 2,000 characters) and the field of science CORDIS assigns to it from the [euroSciVoc](https://op.europa.eu/en/web/eu-vocabularies/euroscivoc) classification; only projects with a single top-level field were drawn. Source: [CORDIS - EU research projects under Horizon 2020](https://data.europa.eu/data/datasets/cordish2020projects), Publications Office of the European Union, reused under the [Commission reuse decision](https://eur-lex.europa.eu/eli/dec/2011/833/oj) with attribution.
+
+One question on the `objective` column, 1,000 rows, about 45 seconds and 0.03 USD:
+
+- question: `Which field of science is this research project mainly about?`
+- answers: `natural sciences, engineering and technology, medical and health sciences, agricultural sciences, social sciences, humanities`, then the same labels with descriptions listing their disciplines (as `natural sciences (mathematics, computer and information sciences, physics, chemistry, earth and environmental sciences, biology)`); the full text is in `demo/cordis_questions.py`.
+
+| Field in CORDIS | Projects | Same field, without descriptions | With descriptions |
+|---|---|---|---|
+| natural sciences | 475 | 334 | 362 |
+| engineering and technology | 182 | 150 | 152 |
+| medical and health sciences | 150 | 139 | 134 |
+| social sciences | 145 | 92 | 98 |
+| humanities | 39 | 32 | 35 |
+| agricultural sciences | 9 | 5 | 5 |
+| **all** | **1,000** | **752 (75%)** | **786 (79%)** |
+
+Confidence separates the answers to trust from those to read: with descriptions, 825 answers have a confidence of 0.8 or more and 85% of them match CORDIS; the 175 below 0.8 match only about half of the time.
+
+Most disagreements are on the line between natural sciences and engineering (73 projects CORDIS puts in natural sciences, the model in engineering), and the reference is not always right either: "Efficient and Eco-friendly Construction Of Revolutionary surfboard blanKs" is filed by CORDIS under astronomy and planetary sciences, and by the model under engineering (confidence 1.00). In CORDIS, 30 of the 1,000 projects are flagged as human-validated; what the flag covers is not documented.
 
 <a id="choosing-a-model"></a>
 ## Choosing a model

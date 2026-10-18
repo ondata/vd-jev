@@ -100,6 +100,16 @@ Source: "Tenders Electronic Daily (TED) (csv subset)", European Commission DG GR
 - [x] README section on the TED example → check: read through
   - Done 2026-10-18 (`demo/ted_questions.py`, in-process through `jevAsk`): health noul 1000 rows 45 s 0.0119 USD; buyer kind 1000 rows 44 s 0.0141 USD; green criterion 55 rows 0.0007 USD; 0 errors. Health vs `main_activity`: precision 56/59, recall 56/120, 54 of the 64 misses are Malta's "Department of Contracts" (recall 56/66 without it); 3 false positives, one ETB.
 
+## Phase 4f - Real data: CORDIS (2026-10-18, asked by the user)
+
+Why: the TED award criteria gave only 55 rows to compare. CORDIS "EU research projects under Horizon 2020" (data.europa.eu `cordish2020projects`, Publications Office) has an English objective per project and a field of science (euroSciVoc) to compare with. Licence: Commission reuse decision (COM_REUSE, reuse with attribution), accepted by the user instead of CC BY.
+
+- [x] Download the projects CSV, look at the columns and at euroSciVoc → check: rows, columns, coverage of the reference field
+- [x] 1000 random projects with objective and top-level field → `demo/cordis_sample.csv`, attribution in README → check: 1000 rows
+- [x] Ask the field of science as a `choice` (top-level euroSciVoc fields, plus `other`), with and without descriptions; compare with euroSciVoc → check: accuracy per field, numbers in LOG
+- [x] README section → check: read through
+  - Done 2026-10-18. `project.csv` has malformed quotes: Python `csv` reads 35,104 of 35,389 rows (the rest dropped); euroSciVoc on 31,906, a single top-level field on 11,979; `Human-validated` true on 735, not described in the official field documentation. Sample of 1000 (seed 42), `other` not added because the six fields cover every project. Results: 75.2% -> 78.6% with descriptions; confidence >= 0.8 on 825 rows, 84.5% match; main confusion natural sciences -> engineering (73, 45 of them under computer and information sciences in euroSciVoc). Cost 0.029 + 0.035 USD, ~45 s per run.
+
 ## Phase 5 - Publication
 
 - [x] Create `aborruso/vd-jev` on GitHub (private) and push → check: `gh repo view` shows it private, `main` pushed
