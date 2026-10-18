@@ -1,23 +1,48 @@
 # vd-jev
 
-A [VisiData](https://www.visidata.org/) plugin that asks closed questions about every cell of a text column and writes the answers back as typed columns: a probability (`noul`), a label from a fixed list (`choice`), or a position on an ordered scale (`score`), each with a calibrated confidence. Answers come from Jev, TypeSafe's decision model, by default.
-
-The plugin talks to [OpenRouter](https://openrouter.ai/docs/guides/community/jev) rather than to TypeSafe directly: with one key and one request format it can use any decision model OpenRouter serves (Jev, Perplexity Decider, Microsoft Decision, Cloudflare Clef and others; see the [live catalog](https://openrouter.ai/api/v1/models?output_modalities=decisions)). Jev is the default; to use another model, set `jev_model`:
-
-```python
-# ~/.visidatarc
-vd.options.jev_model = 'perplexity/pplx-decider-flash-v1.2'
-```
-
-or press `Shift+O` inside VisiData, or start it with `vd --jev-model=perplexity/pplx-decider-flash-v1.2`.
+A [VisiData](https://www.visidata.org/) plugin that asks closed questions about every cell of a text column and writes the answers back as typed columns: a probability (yes/no), a label from a fixed list, or a position on an ordered scale, each with a calibrated confidence. Answers come from Jev, TypeSafe's decision model, by default, or from any other decision model on [OpenRouter](https://openrouter.ai/docs/guides/community/jev).
 
 It brings to VisiData the idea behind MotherDuck's [`prompt_jev()`](https://motherduck.com/docs/sql-reference/motherduck-sql-reference/ai-functions/prompt-jev/) SQL function.
 
-Status: under development, not usable yet. See [PRD.md](PRD.md) for the requirements and [tasks/todo.md](tasks/todo.md) for the plan.
+![vd-jev demo: three questions on ten citizen requests, a frequency table, and the uncertain rows selected](demo/demo.gif)
 
-## Installation (development)
+## Contents
 
-The plugin needs nothing beyond a base VisiData install: it has no runtime dependencies.
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [What it does](#what-it-does)
+- [Choosing a model](#choosing-a-model)
+- [Cost](#cost)
+- [Privacy](#privacy)
+- [Options](#options)
+- [Tests](#tests)
+- [License](#license)
+
+<a id="requirements"></a>
+## Requirements
+
+- VisiData 3.4 (Python 3.10 or later). No other package is needed.
+- An [OpenRouter](https://openrouter.ai/) account with some credit: every row is a paid request (see [Cost](#cost)).
+- An OpenRouter API key, created at <https://openrouter.ai/keys>, in the `OPENROUTER_API_KEY` environment variable of the shell that starts VisiData:
+
+  ```bash
+  export OPENROUTER_API_KEY=sk-or-...
+  ```
+
+  To keep it across sessions, add that line to your shell startup file (`~/.bashrc`, `~/.zshrc`). The key is read only from the environment, never from VisiData options.
+
+The plugin checks these before sending anything. Without the key, the command stops with `set $OPENROUTER_API_KEY` and adds no columns. With a key that OpenRouter refuses (invalid, revoked, or without credit), the run stops at the first refusal and reports the reason given by OpenRouter.
+
+<a id="installation"></a>
+## Installation
+
+The plugin is a single file with no dependencies beyond VisiData itself, and VisiData loads it automatically.
+
+```bash
+uv tool install visidata --with git+https://github.com/aborruso/vd-jev
+```
+
+or, from a local clone:
 
 ```bash
 uv tool install visidata --with-editable ~/git/vd-jev
@@ -25,15 +50,83 @@ uv tool install visidata --with-editable ~/git/vd-jev
 
 If VisiData is already installed as a `uv tool` with extra packages, add `--reinstall` and repeat every `--with` you already use: reinstalling drops any extra that is not passed again.
 
+<a id="what-it-does"></a>
+## What it does
+
+Put the cursor on a column of text, press `Space`, type `jev-column` (or `jev-selected` for the selected rows only), and fill in the form: `Tab` moves between the two fields, `Enter` sends.
+
+| `question` | `answers` | New columns |
+|---|---|---|
+| Does the message report a safety hazard? | *(empty)* | `message_noul`: probability of yes, 0 to 1 |
+| Which department should handle this? | `roads, parks, noise` | `message_choice`: one of the labels; `message_choice_conf` |
+| How urgent is this request? | `low < medium < high` | `message_score`: 0 (low) to 2 (high); `message_score_conf` |
+
+What you write in `answers` sets the kind of question: nothing for yes/no, labels separated by commas to pick one, levels separated by `<` (lowest first) for an ordered scale. Empty cells are skipped. The cursor stays on the text column, so you can ask the next question right away; a status message reports rows answered, skipped, errors and cost. Each run also adds a hidden `_raw` column with the full answer as JSON (per-label probabilities included), or the error for that row.
+
+The new columns are ordinary VisiData columns. In the demo above:
+
+- `Shift+F` on `message_choice` counts the requests per department;
+- `z|` with `0 < message_score_conf < 0.5` selects the rows where the model is unsure, to read them by hand (the `0 <` leaves out the empty row).
+
+Try it on the demo file:
+
+```bash
+vd demo/city_requests.csv
+```
+
+<a id="choosing-a-model"></a>
+## Choosing a model
+
+The plugin talks to OpenRouter rather than to TypeSafe directly: with one key and one request format it can use any decision model OpenRouter serves through its Decisions API (Jev, Perplexity Decider, Microsoft Decision, Cloudflare Clef and others; see the [live catalog](https://openrouter.ai/api/v1/models?output_modalities=decisions)). Jev 1.14 is the default; to use another model, set `jev_model`:
+
+```python
+# ~/.visidatarc
+vd.options.jev_model = 'perplexity/pplx-decider-flash-v1.2'
+```
+
+or press `Shift+O` inside VisiData, or start it with `vd --jev-model=perplexity/pplx-decider-flash-v1.2` (with `=`: with a space VisiData reads the value as a file to open).
+
+Probabilities and confidences are not comparable across models: a threshold that works with one model has to be checked again with another.
+
+<a id="cost"></a>
+## Cost
+
+Each row is one request, billed by OpenRouter on input tokens. Measured on the demo file (short messages, one question), on 2026-10-18:
+
+| Model | Per row | 1,000 rows |
+|---|---|---|
+| `typesafe/jev-1.14` (default) | about 0.000012 USD | about 0.012 USD |
+| `perplexity/pplx-decider-flash-v1.2` | about 0.000001 USD | about 0.001 USD |
+
+Longer texts and more labels cost more, in proportion to the tokens sent; the status message at the end of each run reports the real cost. Above 100 non-empty rows (`jev_confirm_rows`) the plugin asks for confirmation before sending anything. Prices are in the [catalog](https://openrouter.ai/api/v1/models?output_modalities=decisions) and may change.
+
+<a id="privacy"></a>
+## Privacy
+
+The text of each cell is sent to OpenRouter and to the provider of the chosen model (TypeSafe, in the United States, for Jev). Use it on public data; not on personal or confidential data without an agreement in place.
+
+<a id="options"></a>
+## Options
+
+| Option | Default | Meaning |
+|---|---|---|
+| `jev_model` | `typesafe/jev-1.14` | decision model id on OpenRouter |
+| `jev_api_url` | `https://openrouter.ai/api/alpha/decisions` | OpenRouter Decisions API endpoint |
+| `jev_concurrency` | `8` | parallel requests |
+| `jev_confirm_rows` | `100` | ask for confirmation above this many rows |
+| `jev_timeout` | `30` | seconds per request |
+
+<a id="tests"></a>
 ## Tests
 
 ```bash
-uv run pytest            # unit tests and .vdx replays, no network
+uv run pytest            # unit tests, command tests and .vdx replays, no network
 uv run pytest -m live    # one real call per question type; needs OPENROUTER_API_KEY, costs about 0.00004 USD
 ```
 
-HTTP is tested against a local server that plays scripted answers. `.vdx` replays run in batch with `--config /dev/null`, so your own `.visidatarc` is not involved.
+HTTP is tested against a local server that plays scripted answers. `.vdx` replays run in batch with `--config /dev/null`, so your own `.visidatarc` is not involved. The demo recording is made with [VHS](https://github.com/charmbracelet/vhs): `vhs demo/demo.tape` (real calls, about 0.0004 USD).
 
+<a id="license"></a>
 ## License
 
 GPL-3.0-only, same as VisiData.

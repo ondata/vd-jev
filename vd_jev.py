@@ -42,6 +42,7 @@ __version__ = '0.1.0'
 import concurrent.futures
 import json
 import os
+import threading
 import time
 import urllib.error
 import urllib.request
@@ -61,6 +62,16 @@ JEV_QUESTION_KEY = 'answer'
 
 class JevError(Exception):
     'Any failure asking the decision model: invalid question, HTTP error, timeout, malformed answer.'
+    def __init__(self, message, status=None):
+        super().__init__(message)
+        self.status = status  # HTTP status code, when the failure is an HTTP error
+
+
+# HTTP codes that would refuse every row in the same way: stop the run at the first one
+JEV_STOP_HINTS = {
+    401: 'check $OPENROUTER_API_KEY',
+    402: 'add credit at https://openrouter.ai/settings/credits',
+}
 
 
 def jev_parse_answers(text):
@@ -114,7 +125,7 @@ def _http_error_message(e):
         message = json.loads(e.read().decode('utf-8'))['error']['message']
     except Exception:
         message = e.reason
-    return f'OpenRouter returned HTTP {e.code}: {message}'
+    return f'OpenRouter returned HTTP {e.code}: {str(message).rstrip(".")}'
 
 
 def _retry_delay(e, attempt):
@@ -141,7 +152,7 @@ def jev_send(body, api_key, url, timeout, retries=3):
             if e.code == 429 and attempt < retries:
                 time.sleep(_retry_delay(e, attempt))
                 continue
-            raise JevError(_http_error_message(e)) from e
+            raise JevError(_http_error_message(e), status=e.code) from e
         except urllib.error.URLError as e:
             raise JevError(f'cannot reach OpenRouter: {e.reason}') from e
         except TimeoutError as e:
@@ -231,12 +242,25 @@ def jevRun(sheet, todo, question, api_key, nskipped, valuecol, confcol, rawcol):
     args = (question, api_key, vd.options.jev_model, vd.options.jev_api_url, vd.options.jev_timeout)
     answered = errors = 0
     cost = 0.0
+    stopped = False
+    refused = threading.Event()
+
+    def ask(text):
+        'Run in the pool: do not send anything once a request has been refused.'
+        if refused.is_set():
+            return None
+        try:
+            return jev_ask(text, *args)
+        except JevError as e:
+            if e.status in JEV_STOP_HINTS:
+                refused.set()
+            raise
 
     pool = concurrent.futures.ThreadPoolExecutor(max_workers=max(1, vd.options.jev_concurrency))
     try:
-        pending = {pool.submit(jev_ask, text, *args): row for row, text in todo}
+        pending = {pool.submit(ask, text): row for row, text in todo}
         with Progress(gerund=f'asking {vd.options.jev_model}', total=len(pending)) as prog:
-            while pending:
+            while pending and not stopped:
                 # short waits, so that Ctrl+C reaches this thread quickly
                 done, _ = concurrent.futures.wait(pending, timeout=0.25, return_when=concurrent.futures.FIRST_COMPLETED)
                 for fut in done:
@@ -248,6 +272,13 @@ def jevRun(sheet, todo, question, api_key, nskipped, valuecol, confcol, rawcol):
                         vd.exceptionCaught(e)
                         rawcol.setValue(row, f'error: {e}')
                         errors += 1
+                        hint = JEV_STOP_HINTS.get(getattr(e, 'status', None))
+                        if hint:
+                            vd.warning(f'stopped: {e}; {hint}')
+                            stopped = True
+                            break
+                        continue
+                    if r is None:  # not sent, after a refusal
                         continue
                     valuecol.setValue(row, r['value'])
                     if confcol:

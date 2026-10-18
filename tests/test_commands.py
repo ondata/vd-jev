@@ -28,6 +28,8 @@ def jev(fakejev, monkeypatch):
     fakejev.responder = deterministic_answer
     fakejev.statuses = []
     monkeypatch.setattr(vd, 'status', lambda *args, **kwargs: fakejev.statuses.append(' '.join(map(str, args))), raising=False)
+    fakejev.warnings = []
+    monkeypatch.setattr(vd, 'warning', lambda *args, **kwargs: fakejev.warnings.append(' '.join(map(str, args))), raising=False)
     yield fakejev
     for k, v in saved.items():
         vd.options[k] = v
@@ -164,3 +166,19 @@ def test_cursor_stays_on_source_column(jev):
     sheet.cursorVisibleColIndex = 0
     ask(sheet, 'q?', 'roads, parks')
     assert sheet.cursorCol.name == 'text'
+
+
+@pytest.mark.parametrize('status, message, hint', [
+    (401, 'User not found.', 'check $OPENROUTER_API_KEY'),
+    (402, 'Insufficient credits', 'add credit at https://openrouter.ai/settings/credits'),
+])
+def test_refused_key_stops_the_run(jev, status, message, hint):
+    'A key OpenRouter refuses fails every row the same way: stop at the first refusal instead of sending them all.'
+    vd.options.jev_concurrency = 1
+    jev.reply({'error': {'message': message, 'code': status}}, status=status)
+    sheet = textsheet(*'abcde')
+    ask(sheet)
+    time.sleep(0.3)  # nothing else may arrive late
+    assert len(jev.requests) == 1
+    assert jev.warnings[-1] == f'stopped: OpenRouter returned HTTP {status}: {message.rstrip(".")}; {hint}'
+    assert jev.statuses[-1] == 'jev noul: 0 rows answered, 0 skipped (empty), 1 errors, 0.000000 USD'
