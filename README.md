@@ -6,6 +6,8 @@ vd-jev is a VisiData plugin that asks closed questions about every cell of a tex
 
 It brings to VisiData the idea behind MotherDuck's [`prompt_jev()`](https://motherduck.com/docs/sql-reference/motherduck-sql-reference/ai-functions/prompt-jev/) SQL function.
 
+**Your data leaves your computer.** The text of every cell you ask about is sent to OpenRouter and from there to the servers of the provider of the chosen model (TypeSafe, in the United States, for the default Jev). Use it on data you are allowed to share with them; see [Privacy](#privacy).
+
 ![vd-jev demo: three questions on ten citizen requests, a frequency table, and the uncertain rows selected](demo/demo.gif)
 
 ## Contents
@@ -104,7 +106,18 @@ Put the cursor on a column of text, press `Space`, type `jev-column` (or `jev-se
 | Which department should handle this? | `roads, parks, noise` | `message_choice`: one of the labels; `message_choice_conf`; `message_choice_p`: the probability of every label |
 | How urgent is this request? | `low < medium < high` | `message_score`: 0 (low) to 2 (high); `message_score_conf`; `message_score_p`: the probability of every level |
 
-What you write in `answers` sets the kind of question: nothing for yes/no, labels separated by commas to pick one, levels separated by `<` (lowest first) for an ordered scale. Empty cells are skipped. The cursor stays on the text column, so you can ask the next question right away; a status message reports rows answered, skipped, errors and cost. Each run also adds a hidden `_raw` column with the full answer as JSON, or the error for that row: `gv` shows hidden columns. VisiData saves only visible columns, so show `_raw` before saving if you want to keep it.
+What you write in `answers` sets the kind of question: nothing for yes/no, labels separated by commas to pick one, levels separated by `<` (lowest first) for an ordered scale.
+
+A label or level can carry a description in parentheses, for the model only: it tells the model where the label ends, and it is never returned. Columns and values keep the short labels.
+
+```
+roads (streets, sidewalks, potholes, markings, street lighting), parks (green areas, playgrounds, benches), noise (anything that disturbs rest)
+low (can wait) < medium (this week) < high (danger now)
+```
+
+On the demo file this changes only the borderline rows. Without descriptions, "A streetlight on the path through Central Park has been out for a week" goes to `parks` (confidence 0.89); with "street lighting" under `roads`, it goes to `roads` (0.52). Clear messages keep the same label.
+
+The rest works as usual. Empty cells are skipped. The cursor stays on the text column, so you can ask the next question right away; a status message reports rows answered, skipped, errors and cost. Each run also adds a hidden `_raw` column with the full answer as JSON, or the error for that row: `gv` shows hidden columns. VisiData saves only visible columns, so show `_raw` before saving if you want to keep it.
 
 The new columns are ordinary VisiData columns. In the demo above:
 

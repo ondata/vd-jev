@@ -84,6 +84,16 @@ def test_probabilities_expand_into_columns(jev):
     assert [sheet.column('text_choice_p.roads').getTypedValue(r) for r in sheet.rows] == [0.05, 0.9]
 
 
+def test_descriptions_sent_but_not_returned(jev):
+    cols = ask(textsheet('ab', 'abc'), 'Which department?', 'roads (potholes, markings), parks (green areas), noise')
+    assert jev.requests[0]['body']['questions']['answer']['criteria'] == {'roads': 'potholes, markings', 'parks': 'green areas', 'noise': None}
+    assert cols['text_choice'] == ['noise', 'roads']
+    assert list(cols['text_choice_p'][0]) == ['roads', 'parks', 'noise']
+    cols = ask(textsheet('ab'), 'How urgent?', 'low (can wait) < medium < high (danger now)')
+    assert jev.requests[-1]['body']['questions']['answer']['criteria'] == ['low: can wait', 'medium', 'high: danger now']
+    assert list(cols['text_score_p'][0]) == ['low', 'medium', 'high']
+
+
 def test_request_uses_options(jev):
     vd.options.jev_model = 'typesafe/jev-test'
     ask(textsheet('a fallen tree'), 'Is it a hazard?')

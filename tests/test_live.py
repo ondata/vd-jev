@@ -41,3 +41,13 @@ def test_score():
     assert 0 <= r['value'] <= len(levels) - 1
     assert 0 <= r['confidence'] <= 1
     assert list(r['probabilities']) == levels and None not in r['probabilities'].values()
+
+
+def test_choice_with_descriptions():
+    'Descriptions go to the model only: the answer is still one of the short labels.'
+    from vd_jev import jev_parse_answers
+    kind, labels, descriptions = jev_parse_answers('roads (streets, potholes, street lighting), parks (green areas, playgrounds), noise (anything that disturbs rest)')
+    r = jev_ask(TEXT, jev_build_question(kind, 'Which city department should handle this request?', labels, descriptions),
+                os.environ['OPENROUTER_API_KEY'], MODEL, URL, timeout=30, labels=labels)
+    assert r['value'] in labels
+    assert list(r['probabilities']) == labels

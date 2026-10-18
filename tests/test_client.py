@@ -19,15 +19,41 @@ def response(answer, cost=0.000016):
 # labels and questions
 
 @pytest.mark.parametrize('text, expected', [
-    ('', ('noul', [])),
-    ('   ', ('noul', [])),
-    (None, ('noul', [])),
-    ('roads, parks , noise', ('choice', ['roads', 'parks', 'noise'])),
-    ('low < medium<high', ('score', ['low', 'medium', 'high'])),
-    ('roads,,parks', ('choice', ['roads', '', 'parks'])),  # the empty label is rejected later
+    ('', ('noul', [], [])),
+    ('   ', ('noul', [], [])),
+    (None, ('noul', [], [])),
+    ('roads, parks , noise', ('choice', ['roads', 'parks', 'noise'], [None, None, None])),
+    ('low < medium<high', ('score', ['low', 'medium', 'high'], [None, None, None])),
+    ('roads,,parks', ('choice', ['roads', '', 'parks'], [None, None, None])),  # the empty label is rejected later
+    ('roads (potholes, markings), parks (green areas), noise',
+     ('choice', ['roads', 'parks', 'noise'], ['potholes, markings', 'green areas', None])),
+    ('low (can wait) < medium < high (danger now, a < b)',
+     ('score', ['low', 'medium', 'high'], ['can wait', None, 'danger now, a < b'])),
+    ('roads (), parks', ('choice', ['roads', 'parks'], [None, None])),
 ])
 def test_parse_answers(text, expected):
     assert jev_parse_answers(text) == expected
+
+
+@pytest.mark.parametrize('text', ['roads (potholes, parks', 'roads), parks', 'low (a < high'])
+def test_parse_answers_unbalanced(text):
+    with pytest.raises(JevError, match='unbalanced parentheses in answers'):
+        jev_parse_answers(text)
+
+
+def test_descriptions_go_to_the_model():
+    kind, labels, descriptions = jev_parse_answers('roads (potholes, markings), parks, noise (loud music)')
+    q = jev_build_question(kind, 'Which department?', labels, descriptions)
+    assert q['criteria'] == {'roads': 'potholes, markings', 'parks': None, 'noise': 'loud music'}
+    kind, labels, descriptions = jev_parse_answers('low (can wait) < medium < high (danger now)')
+    q = jev_build_question(kind, 'How urgent?', labels, descriptions)
+    assert q['criteria'] == ['low: can wait', 'medium', 'high: danger now']
+
+
+def test_score_probabilities_keep_the_short_labels():
+    q = jev_build_question('score', 'q', ['low', 'medium', 'high'], ['can wait', None, 'danger now'])
+    r = jev_parse_answer(q, response(SCORE), labels=['low', 'medium', 'high'])
+    assert r['probabilities'] == {'low': 0.1, 'medium': 0.2, 'high': 0.7}
 
 
 def test_parse_answers_then_validate():

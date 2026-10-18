@@ -80,6 +80,15 @@ Jev returns the probability of every label (choice) and level (score), but the p
 - [x] README: the `_p` column and `(`; `gv` shows the hidden `_raw` column, and hidden columns are not saved → check: read through
   - Done 2026-10-18: 66 tests pass, goldens for choice and score regenerated (dicts saved as `{3} roads=0.05 ...`), live tests check that real score probabilities map to the level names; README and plugin docstring updated.
 
+## Phase 4d - Label descriptions (2026-10-18, asked by the user)
+
+Descriptions are machine to machine: the model reads them to tell similar labels apart and never returns them. Decided with the user: written in parentheses inside `answers`, e.g. `roads (potholes, markings), parks (green areas, benches), noise` or `low (can wait) < medium < high (danger now)`; commas and `<` inside parentheses do not separate. Column names, values and `_p` keys stay the short labels.
+
+- [x] `jev_parse_answers` returns (kind, labels, descriptions), splitting only outside parentheses; unbalanced parentheses fail → check: unit tests
+- [x] `jev_build_question` sends choice criteria as `{label: description}` and score levels as `label: description`; `jev_parse_answer` gets the short labels, so score probabilities stay keyed by them → check: unit tests, in-process command test (request criteria and short values), one live call with descriptions
+- [x] README: how to write descriptions, and that they are not returned → check: read through
+  - Done 2026-10-18: 75 tests + 4 live pass. Live comparison on the 9 demo messages (`Which department`, Jev 1.14): 7 clear messages unchanged; streetlight in park `parks` 0.89 -> `roads` 0.52 with "street lighting" under roads; road works `roads` 0.77 -> `roads` 0.46 with noise = "anything that disturbs rest". The user asked whether descriptions were useless; after the comparison chose to keep them.
+
 ## Phase 5 - Publication
 
 - [x] Create `aborruso/vd-jev` on GitHub (private) and push → check: `gh repo view` shows it private, `main` pushed

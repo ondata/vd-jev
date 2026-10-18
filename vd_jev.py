@@ -15,6 +15,8 @@ ordered scale (score), each with a calibrated confidence.
    - `question`: a closed question, e.g. "Which department should handle this?"
    - `answers`: empty for a yes/no question, `roads, parks, noise` to pick one
      label, `low < medium < high` for a position on an ordered scale.
+     A description for the model may follow a label in parentheses:
+     `roads (potholes, street lighting), parks, noise`; it is never returned.
 4. New columns appear next to the source column:
    - `{colname}_noul`: probability that the answer is yes (0-1)
    - `{colname}_choice`, `{colname}_choice_conf`: label and confidence
@@ -76,19 +78,64 @@ JEV_STOP_HINTS = {
 }
 
 
+def _split_outside_parens(text, sep):
+    'Split *text* on *sep*, except inside parentheses.'
+    parts, depth, cur = [], 0, ''
+    for ch in text:
+        if ch == '(':
+            depth += 1
+        elif ch == ')':
+            depth -= 1
+            if depth < 0:
+                raise JevError('unbalanced parentheses in answers')
+        if ch == sep and depth == 0:
+            parts.append(cur)
+            cur = ''
+        else:
+            cur += ch
+    if depth != 0:
+        raise JevError('unbalanced parentheses in answers')
+    return parts + [cur]
+
+
+def _outside_parens(text):
+    'Return *text* without the parts in parentheses (balance is checked by _split_outside_parens).'
+    out, depth = '', 0
+    for ch in text:
+        if ch == '(':
+            depth += 1
+        elif ch == ')':
+            depth -= 1
+        elif depth <= 0:
+            out += ch
+    return out
+
+
+def _label_and_description(item):
+    'Split `roads (potholes, markings)` into (`roads`, `potholes, markings`); no parentheses -> (item, None).'
+    item = item.strip()
+    if item.endswith(')') and '(' in item:
+        name, desc = item[:-1].split('(', 1)
+        return name.strip(), desc.strip() or None
+    return item, None
+
+
 def jev_parse_answers(text):
-    '''Return (kind, labels) from the answers the user typed:
-    empty -> noul; `a, b, c` -> choice; `low < medium < high` -> score, lowest first.'''
+    '''Return (kind, labels, descriptions) from the answers the user typed:
+    empty -> noul; `a, b, c` -> choice; `low < medium < high` -> score, lowest first.
+    A label may carry a description for the model in parentheses: `roads (potholes, markings)`;
+    commas and `<` inside parentheses do not separate. descriptions[i] is None when there is none.'''
     text = (text or '').strip()
     if not text:
-        return 'noul', []
-    if '<' in text:
-        return 'score', [level.strip() for level in text.split('<')]
-    return 'choice', [label.strip() for label in text.split(',')]
+        return 'noul', [], []
+    kind, sep = ('score', '<') if '<' in _outside_parens(text) else ('choice', ',')
+    items = [_label_and_description(item) for item in _split_outside_parens(text, sep)]
+    return kind, [name for name, _ in items], [desc for _, desc in items]
 
 
-def jev_build_question(kind, instructions, labels=None):
-    'Return the question object for one question of type *kind*.'
+def jev_build_question(kind, instructions, labels=None, descriptions=None):
+    '''Return the question object for one question of type *kind*.
+    *descriptions* (optional, aligned with *labels*) are sent to the model only.'''
     if kind not in JEV_KINDS:
         raise JevError(f'unknown question type `{kind}`; use one of {", ".join(JEV_KINDS)}')
     instructions = (instructions or '').strip()
@@ -107,12 +154,14 @@ def jev_build_question(kind, instructions, labels=None):
     if len(labels) < 2:
         raise JevError(f'{kind} needs at least 2 labels')
 
+    descriptions = list(descriptions or []) + [None] * (len(labels) - len(descriptions or []))
     if kind == 'choice':
-        question['criteria'] = {label: None for label in labels}
+        question['criteria'] = dict(zip(labels, descriptions))
     else:
         if len(labels) > JEV_MAX_SCORE_LEVELS:
             raise JevError(f'score accepts at most {JEV_MAX_SCORE_LEVELS} levels')
-        question['criteria'] = labels  # lowest level first
+        # lowest level first; a level is plain text, so the description goes after the label
+        question['criteria'] = [f'{label}: {desc}' if desc else label for label, desc in zip(labels, descriptions)]
     return question
 
 
@@ -167,12 +216,13 @@ def _float_or_none(x):
     return None if x is None else float(x)
 
 
-def jev_parse_answer(question, response):
+def jev_parse_answer(question, response, labels=None):
     '''Return dict(value, confidence, probabilities, raw, cost) from a Jev *response* to *question*.
 
     value is a float for noul and score, one of the labels for choice;
     confidence is None for noul; probabilities maps each label (choice) or level
-    (score, in scale order) to its probability, None for noul or when the model omits them.'''
+    (score, in scale order) to its probability, None for noul or when the model omits them.
+    *labels* are the short labels, used as keys when the score levels carry descriptions.'''
     kind = question['type']
     probabilities = None
     try:
@@ -188,7 +238,7 @@ def jev_parse_answer(question, response):
             value, confidence = float(answer['score']), float(answer['confidence'])
             if answer.get('probabilities') is not None:  # keyed "0", "1", ...: back to the level names
                 probs = answer['probabilities']
-                probabilities = {level: _float_or_none(probs.get(str(i))) for i, level in enumerate(question['criteria'])}
+                probabilities = {level: _float_or_none(probs.get(str(i))) for i, level in enumerate(labels or question['criteria'])}
         cost = float((response.get('usage') or {}).get('cost') or 0)
     except (KeyError, TypeError, ValueError, AttributeError) as e:
         raise JevError(f'malformed {kind} answer from the model') from e
@@ -197,9 +247,9 @@ def jev_parse_answer(question, response):
     return dict(value=value, confidence=confidence, probabilities=probabilities, raw=json.dumps(answer), cost=cost)
 
 
-def jev_ask(state, question, api_key, model, url, timeout):
+def jev_ask(state, question, api_key, model, url, timeout, labels=None):
     'Ask *question* about *state* and return the parsed answer.'
-    return jev_parse_answer(question, jev_send(jev_build_request(state, question, model), api_key, url, timeout))
+    return jev_parse_answer(question, jev_send(jev_build_request(state, question, model), api_key, url, timeout), labels)
 
 
 @VisiData.api
@@ -216,8 +266,8 @@ def inputJev(vd):
 def jevAsk(sheet, col, rows, question='', answers=''):
     'Ask the decision model *question* about the text of *col* in each of *rows*; add the answers as new columns.'
     try:
-        kind, labels = jev_parse_answers(answers)
-        q = jev_build_question(kind, question, labels)
+        kind, labels, descriptions = jev_parse_answers(answers)
+        q = jev_build_question(kind, question, labels, descriptions)
     except JevError as e:
         vd.fail(str(e))
 
@@ -247,12 +297,12 @@ def jevAsk(sheet, col, rows, question='', answers=''):
     if col in sheet.visibleCols:  # stay on the text column, ready for the next question
         sheet.cursorVisibleColIndex = sheet.visibleCols.index(col)
 
-    sheet.jevRun(todo, q, api_key, len(rows)-len(todo), valuecol, confcol, probcol, rawcol)
+    sheet.jevRun(todo, q, labels, api_key, len(rows)-len(todo), valuecol, confcol, probcol, rawcol)
 
 
 @Sheet.api
 @asyncthread
-def jevRun(sheet, todo, question, api_key, nskipped, valuecol, confcol, probcol, rawcol):
+def jevRun(sheet, todo, question, labels, api_key, nskipped, valuecol, confcol, probcol, rawcol):
     'Send one request per (row, text) in *todo*, *jev_concurrency* at a time, and fill the result columns.'
     args = (question, api_key, vd.options.jev_model, vd.options.jev_api_url, vd.options.jev_timeout)
     answered = errors = 0
@@ -265,7 +315,7 @@ def jevRun(sheet, todo, question, api_key, nskipped, valuecol, confcol, probcol,
         if refused.is_set():
             return None
         try:
-            return jev_ask(text, *args)
+            return jev_ask(text, *args, labels=labels)
         except JevError as e:
             if e.status in JEV_STOP_HINTS:
                 refused.set()
