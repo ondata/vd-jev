@@ -56,8 +56,9 @@ Decided with the user on 2026-10-18: the question type comes from what the user 
 
 - [x] Run the three kinds of question on `demo/city_requests.csv` with real calls → check: answers and cost recorded in `LOG.md`
   - Done 2026-10-18, `tests/demo-{noul,choice,score}.vdx` in batch on the Decisions API with Jev 1.14, see LOG. Cost not printed in batch; 9 calls at ~0.000013 USD each (from the live tests), ~0.00012 USD.
-- [ ] Guided interactive test with the user in their shell, step by step, on a guide whose every step was verified beforehand
+- [x] Guided interactive test with the user in their shell, step by step, on a guide whose every step was verified beforehand
   - Guide steps verified 2026-10-18: keys in the VisiData 3.4 source (`Space` exec-longname, `c` go-col-regex, `Tab` next form field, `F` freq-col, `q` quit-sheet, `l` go-right, `[` sort-asc, `z|` select-expr, `gq` quit-all) and the whole sequence as `tests/guide-nosave.vdx`. Found while checking: the cursor moves to the new column after `jev-column`; `go-col-regex` searches forward, so the guide uses `^message$`; in `select-expr` an empty cell passes `< 0.5`, so the guide uses `0 < message_score_conf < 0.5`.
+  - Done 2026-10-18 with the user, Windows Terminal, screenshots. All three types worked on real calls (~0.000012-0.000013 USD per row); status summary shown in the `statuses` box; the bar row was the only one selected (urgency 0.91, confidence 0.17). Found: the user asked the urgency question while the cursor was still on `message_choice`, because the plugin moves the cursor to the new column; proposal: keep the cursor on the source column.
 
 ## Phase 5 - Publication
 
