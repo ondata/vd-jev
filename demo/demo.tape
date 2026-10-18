@@ -1,6 +1,6 @@
-# vd-jev demo: vhs demo/demo.tape (run from the repo root; real calls, ~0.0004 USD)
+# vd-jev demo: run demo/record.sh from the repo root (real calls, ~0.0004 USD)
 
-Output demo/demo.gif
+Output tmp/demo-vhs.gif
 
 Require vd
 
@@ -31,6 +31,7 @@ Sleep 800ms
 Space
 Sleep 300ms
 Type "jev-column"
+Sleep 2.5s
 Enter
 Sleep 500ms
 Type "Does the message report a safety hazard?"
@@ -43,6 +44,7 @@ Sleep 5s
 Space
 Sleep 300ms
 Type "jev-column"
+Sleep 2.5s
 Enter
 Sleep 500ms
 Type "Which department should handle this?"
@@ -68,6 +70,7 @@ Sleep 500ms
 Space
 Sleep 300ms
 Type "jev-column"
+Sleep 2.5s
 Enter
 Sleep 500ms
 Type "How urgent is this request?"

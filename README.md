@@ -124,7 +124,7 @@ uv run pytest            # unit tests, command tests and .vdx replays, no networ
 uv run pytest -m live    # one real call per question type; needs OPENROUTER_API_KEY, costs about 0.00004 USD
 ```
 
-HTTP is tested against a local server that plays scripted answers. `.vdx` replays run in batch with `--config /dev/null`, so your own `.visidatarc` is not involved. The demo recording is made with [VHS](https://github.com/charmbracelet/vhs): `vhs demo/demo.tape` (real calls, about 0.0004 USD).
+HTTP is tested against a local server that plays scripted answers. `.vdx` replays run in batch with `--config /dev/null`, so your own `.visidatarc` is not involved. The demo recording is made with [VHS](https://github.com/charmbracelet/vhs) and ffmpeg: `demo/record.sh` (real calls, about 0.0004 USD).
 
 <a id="license"></a>
 ## License

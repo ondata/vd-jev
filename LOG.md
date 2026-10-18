@@ -2,6 +2,7 @@
 
 ## 2026-10-18
 
+- Demo GIF slowed down (90 ms typing, pauses after question, answers, command name and results) and re-encoded with ffmpeg via `demo/record.sh`: XnView refused VHS's 1x1-delta GIF.
 - README actually rewritten (the previous commit `5b9f93e` claimed it but the write had failed): requirements (OpenRouter account, credit, `OPENROUTER_API_KEY`), install, usage, model choice, cost, privacy, options. Run now stops at the first HTTP 401 (bad key, checked live: `User not found`) or 402 (no credit, per OpenRouter docs, tested on the fake only) with a hint; 403 is not a stop code, OpenRouter uses it for moderation of a single input.
 - Cursor now stays on the source column after `jev-column` (test first, failed, then fixed). Demo extended to 10 rows. VHS recording `demo/demo.gif` from `demo/demo.tape`. README rewritten with GIF, usage, costs (Jev ~0.000012 USD/row, Perplexity Decider Flash ~0.000001), privacy, options.
 - Guided manual test with the user passed (noul, choice, frequency table, score, selection of the uncertain row). UX finding: cursor moves to the new column, so the next question was asked on `message_choice` by mistake.
