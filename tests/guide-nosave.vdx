@@ -7,7 +7,7 @@ jev-column {"question": "Does the message report a safety hazard?", "answers": "
 assert-expr cursorCol.name == 'message'
 jev-column {"question": "Which department should handle this?", "answers": "roads, parks, noise"}
 assert-expr cursorCol.name == 'message'
-assert-expr [c.name for c in visibleCols] == ['id', 'district', 'message', 'message_choice', 'message_choice_conf', 'message_noul']
+assert-expr [c.name for c in visibleCols] == ['id', 'district', 'message', 'message_choice', 'message_choice_conf', 'message_choice_p', 'message_noul']
 go-right
 assert-expr cursorCol.name == 'message_choice'
 freq-col

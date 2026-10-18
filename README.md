@@ -100,14 +100,15 @@ Put the cursor on a column of text, press `Space`, type `jev-column` (or `jev-se
 | `question` | `answers` | New columns |
 |---|---|---|
 | Does the message report a safety hazard? | *(empty)* | `message_noul`: probability of yes, 0 to 1 |
-| Which department should handle this? | `roads, parks, noise` | `message_choice`: one of the labels; `message_choice_conf` |
-| How urgent is this request? | `low < medium < high` | `message_score`: 0 (low) to 2 (high); `message_score_conf` |
+| Which department should handle this? | `roads, parks, noise` | `message_choice`: one of the labels; `message_choice_conf`; `message_choice_p`: the probability of every label |
+| How urgent is this request? | `low < medium < high` | `message_score`: 0 (low) to 2 (high); `message_score_conf`; `message_score_p`: the probability of every level |
 
-What you write in `answers` sets the kind of question: nothing for yes/no, labels separated by commas to pick one, levels separated by `<` (lowest first) for an ordered scale. Empty cells are skipped. The cursor stays on the text column, so you can ask the next question right away; a status message reports rows answered, skipped, errors and cost. Each run also adds a hidden `_raw` column with the full answer as JSON (per-label probabilities included), or the error for that row.
+What you write in `answers` sets the kind of question: nothing for yes/no, labels separated by commas to pick one, levels separated by `<` (lowest first) for an ordered scale. Empty cells are skipped. The cursor stays on the text column, so you can ask the next question right away; a status message reports rows answered, skipped, errors and cost. Each run also adds a hidden `_raw` column with the full answer as JSON, or the error for that row: `gv` shows hidden columns. VisiData saves only visible columns, so show `_raw` before saving if you want to keep it.
 
 The new columns are ordinary VisiData columns. In the demo above:
 
 - `Shift+F` on `message_choice` counts the requests per department;
+- `(` on `message_choice_p` expands it into one number column per label (`message_choice_p.roads`, `message_choice_p.parks`, `message_choice_p.noise`), to sort or filter on the second choice too;
 - `z|` with `0 < message_score_conf < 0.5` selects the rows where the model is unsure, to read them by hand (the `0 <` leaves out the empty row).
 
 Try it on the demo file:

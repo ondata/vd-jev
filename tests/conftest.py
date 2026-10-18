@@ -65,7 +65,9 @@ def deterministic_answer(body):
         answer = {'type': 'choice', 'choice': pick, 'probabilities': {l: (0.9 if l == pick else 0.1 / (len(labels)-1)) for l in labels}, 'confidence': 0.9}
     else:
         levels = question['criteria']
-        answer = {'type': 'score', 'score': float(n % len(levels)), 'legend': {str(i): l for i, l in enumerate(levels)}, 'confidence': 0.8}
+        pick = n % len(levels)
+        answer = {'type': 'score', 'score': float(pick), 'legend': {str(i): l for i, l in enumerate(levels)},
+                  'probabilities': {str(i): (0.8 if i == pick else round(0.2 / (len(levels)-1), 2)) for i in range(len(levels))}, 'confidence': 0.8}
     return 200, {}, {'answers': {'answer': answer}, 'usage': {'cost': 0.00001}}, 0
 
 

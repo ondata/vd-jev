@@ -68,7 +68,17 @@ Why: one row per request costs ~0.000012 USD/row with Jev, ~290 input tokens, wh
   - Done 2026-10-18 (`tmp/batch_probe.py`): 3 rows, 3 correct `choice` answers, 450 input tokens, 0.0000189 USD.
 - [x] Run the three demo questions with batch sizes 1 (current format), 5, 9 (all demo rows), and ~27 (demo messages repeated 3 times) → check: per-row cost from `usage.cost`, wall time, and for each row the label / probability compared with batch size 1; results in `LOG.md`
   - Done 2026-10-18 (`tmp/batch_exp.py`, `tmp/batch_exp.json`), see LOG.
-- [ ] Decide with the user: keep one row per request, or add `jev_batch_size` with a default chosen on the numbers
+- [x] Decide with the user: keep one row per request, or add `jev_batch_size` with a default chosen on the numbers
+  - Decided 2026-10-18 with the user: one row per request, no batching option.
+
+## Phase 4c - Per-label probabilities (2026-10-18, asked by the user)
+
+Jev returns the probability of every label (choice) and level (score), but the plugin showed only the winner and the confidence; the rest sat in the hidden `_raw` column, which VisiData does not save. Decided with the user: a visible `<col>_<type>_p` column holding a dict of probabilities, which VisiData's own `(` (`expand-col`) turns into one float column per label (checked in-process: `expand_cols_deep` gives `message_choice_p.roads` etc., typed float). No new option.
+
+- [x] `jev_parse_answer` returns `probabilities` (choice: by label; score: by level name, from the request's ordered criteria; `None` when the model omits them) → check: unit tests, including a missing `probabilities`
+- [x] `jev-column` adds `<col>_choice_p` / `<col>_score_p` after the confidence column, not for noul → check: in-process test of the columns and of `expand_cols_deep` on them; goldens regenerated and reviewed; guide replay updated
+- [x] README: the `_p` column and `(`; `gv` shows the hidden `_raw` column, and hidden columns are not saved → check: read through
+  - Done 2026-10-18: 66 tests pass, goldens for choice and score regenerated (dicts saved as `{3} roads=0.05 ...`), live tests check that real score probabilities map to the level names; README and plugin docstring updated.
 
 ## Phase 5 - Publication
 

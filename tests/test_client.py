@@ -74,7 +74,7 @@ def test_build_request():
 
 def test_parse_noul():
     q = jev_build_question('noul', 'q')
-    assert jev_parse_answer(q, response(NOUL)) == dict(value=0.09, confidence=None, raw=json.dumps(NOUL), cost=0.000016)
+    assert jev_parse_answer(q, response(NOUL)) == dict(value=0.09, confidence=None, probabilities=None, raw=json.dumps(NOUL), cost=0.000016)
 
 
 def test_parse_choice():
@@ -82,12 +82,22 @@ def test_parse_choice():
     r = jev_parse_answer(q, response(CHOICE))
     assert (r['value'], r['confidence']) == ('roads', 0.8)
     assert json.loads(r['raw'])['probabilities'] == {'roads': 0.9, 'parks': 0.1}
+    assert r['probabilities'] == {'roads': 0.9, 'parks': 0.1}
 
 
 def test_parse_score():
     q = jev_build_question('score', 'q', ['low', 'medium', 'high'])
     r = jev_parse_answer(q, response(SCORE))
     assert (r['value'], r['confidence']) == (1.6, 0.7)
+    assert r['probabilities'] == {'low': 0.1, 'medium': 0.2, 'high': 0.7}  # keyed by level, in scale order
+    assert list(r['probabilities']) == ['low', 'medium', 'high']
+
+
+def test_parse_without_probabilities():
+    'The API schema marks probabilities optional.'
+    q = jev_build_question('choice', 'q', ['roads', 'parks'])
+    answer = {k: v for k, v in CHOICE.items() if k != 'probabilities'}
+    assert jev_parse_answer(q, response(answer))['probabilities'] is None
 
 
 def test_parse_missing_cost():

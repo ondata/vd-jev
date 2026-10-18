@@ -19,7 +19,9 @@ ordered scale (score), each with a calibrated confidence.
    - `{colname}_noul`: probability that the answer is yes (0-1)
    - `{colname}_choice`, `{colname}_choice_conf`: label and confidence
    - `{colname}_score`, `{colname}_score_conf`: position from 0 to n-1 and confidence
-   - `{colname}_<type>_raw` (hidden): the full answer as JSON, or the error
+   - `{colname}_choice_p`, `{colname}_score_p`: probability of every label or level;
+     `(` (expand-col) turns it into one column per label
+   - `{colname}_<type>_raw` (hidden, `gv` shows it): the full answer as JSON, or the error
 
 ## Configuration
 
@@ -161,26 +163,38 @@ def jev_send(body, api_key, url, timeout, retries=3):
             raise JevError('OpenRouter answer is not JSON') from e
 
 
+def _float_or_none(x):
+    return None if x is None else float(x)
+
+
 def jev_parse_answer(question, response):
-    '''Return dict(value, confidence, raw, cost) from a Jev *response* to *question*.
+    '''Return dict(value, confidence, probabilities, raw, cost) from a Jev *response* to *question*.
 
     value is a float for noul and score, one of the labels for choice;
-    confidence is None for noul.'''
+    confidence is None for noul; probabilities maps each label (choice) or level
+    (score, in scale order) to its probability, None for noul or when the model omits them.'''
     kind = question['type']
+    probabilities = None
     try:
         answer = response['answers'][JEV_QUESTION_KEY]
         if kind == 'noul':
             value, confidence = float(answer['noul']), None
         elif kind == 'choice':
             value, confidence = answer['choice'], float(answer['confidence'])
+            if answer.get('probabilities') is not None:
+                probs = answer['probabilities']
+                probabilities = {label: _float_or_none(probs.get(label)) for label in question['criteria']}
         else:
             value, confidence = float(answer['score']), float(answer['confidence'])
+            if answer.get('probabilities') is not None:  # keyed "0", "1", ...: back to the level names
+                probs = answer['probabilities']
+                probabilities = {level: _float_or_none(probs.get(str(i))) for i, level in enumerate(question['criteria'])}
         cost = float((response.get('usage') or {}).get('cost') or 0)
     except (KeyError, TypeError, ValueError, AttributeError) as e:
         raise JevError(f'malformed {kind} answer from the model') from e
     if kind == 'choice' and value not in question['criteria']:
         raise JevError(f'the model chose `{value}`, which is not one of the labels')
-    return dict(value=value, confidence=confidence, raw=json.dumps(answer), cost=cost)
+    return dict(value=value, confidence=confidence, probabilities=probabilities, raw=json.dumps(answer), cost=cost)
 
 
 def jev_ask(state, question, api_key, model, url, timeout):
@@ -222,22 +236,23 @@ def jevAsk(sheet, col, rows, question='', answers=''):
 
     valuecol = SettableColumn(f'{col.name}_{kind}', type=str if kind == 'choice' else float)
     newcols = [valuecol]
-    confcol = None
+    confcol = probcol = None
     if kind != 'noul':
         confcol = SettableColumn(f'{col.name}_{kind}_conf', type=float)
-        newcols.append(confcol)
+        probcol = SettableColumn(f'{col.name}_{kind}_p')  # dict of probabilities; `(` expands it into columns
+        newcols += [confcol, probcol]
     rawcol = SettableColumn(f'{col.name}_{kind}_raw', type=str, width=0)  # hidden
     newcols.append(rawcol)
     sheet.addColumnAtCursor(*newcols)
     if col in sheet.visibleCols:  # stay on the text column, ready for the next question
         sheet.cursorVisibleColIndex = sheet.visibleCols.index(col)
 
-    sheet.jevRun(todo, q, api_key, len(rows)-len(todo), valuecol, confcol, rawcol)
+    sheet.jevRun(todo, q, api_key, len(rows)-len(todo), valuecol, confcol, probcol, rawcol)
 
 
 @Sheet.api
 @asyncthread
-def jevRun(sheet, todo, question, api_key, nskipped, valuecol, confcol, rawcol):
+def jevRun(sheet, todo, question, api_key, nskipped, valuecol, confcol, probcol, rawcol):
     'Send one request per (row, text) in *todo*, *jev_concurrency* at a time, and fill the result columns.'
     args = (question, api_key, vd.options.jev_model, vd.options.jev_api_url, vd.options.jev_timeout)
     answered = errors = 0
@@ -283,6 +298,7 @@ def jevRun(sheet, todo, question, api_key, nskipped, valuecol, confcol, rawcol):
                     valuecol.setValue(row, r['value'])
                     if confcol:
                         confcol.setValue(row, r['confidence'])
+                        probcol.setValue(row, r['probabilities'])
                     rawcol.setValue(row, r['raw'])
                     answered += 1
                     cost += r['cost']

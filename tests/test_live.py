@@ -32,6 +32,7 @@ def test_choice():
     r = ask(jev_build_question('choice', 'Which city department should handle this request?', labels))
     assert r['value'] in labels
     assert 0 <= r['confidence'] <= 1
+    assert list(r['probabilities']) == labels and abs(sum(r['probabilities'].values()) - 1) < 0.05
 
 
 def test_score():
@@ -39,3 +40,4 @@ def test_score():
     r = ask(jev_build_question('score', 'How urgent is this request?', levels))
     assert 0 <= r['value'] <= len(levels) - 1
     assert 0 <= r['confidence'] <= 1
+    assert list(r['probabilities']) == levels and None not in r['probabilities'].values()

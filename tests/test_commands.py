@@ -58,9 +58,10 @@ def test_noul(jev):
 
 def test_choice(jev):
     cols = ask(textsheet('ab', 'abc'), 'Which department?', 'roads, parks, noise')
-    assert list(cols) == ['text', 'text_choice', 'text_choice_conf', 'text_choice_raw', 'other']
+    assert list(cols) == ['text', 'text_choice', 'text_choice_conf', 'text_choice_p', 'text_choice_raw', 'other']
     assert cols['text_choice'] == ['noise', 'roads']
     assert cols['text_choice_conf'] == [0.9, 0.9]
+    assert cols['text_choice_p'][1] == {'roads': 0.9, 'parks': 0.05, 'noise': 0.05}
     assert jev.requests[0]['body']['questions']['answer']['criteria'] == {'roads': None, 'parks': None, 'noise': None}
 
 
@@ -68,7 +69,19 @@ def test_score(jev):
     cols = ask(textsheet('ab'), 'How urgent?', 'low < medium < high')
     assert cols['text_score'] == [2.0]
     assert cols['text_score_conf'] == [0.8]
+    assert cols['text_score_p'] == [{'low': 0.1, 'medium': 0.1, 'high': 0.8}]
     assert jev.requests[0]['body']['questions']['answer']['criteria'] == ['low', 'medium', 'high']
+
+
+def test_probabilities_expand_into_columns(jev):
+    'VisiData expand-col (`(`) turns the _p column into one float column per label.'
+    sheet = textsheet('ab', 'abc')
+    ask(sheet, 'Which department?', 'roads, parks, noise')
+    sheet.expand_cols_deep([sheet.column('text_choice_p')], depth=1)
+    vd.sync()
+    names = [c.name for c in sheet.columns]
+    assert ['text_choice_p.roads', 'text_choice_p.parks', 'text_choice_p.noise'] == [n for n in names if n.startswith('text_choice_p.')]
+    assert [sheet.column('text_choice_p.roads').getTypedValue(r) for r in sheet.rows] == [0.05, 0.9]
 
 
 def test_request_uses_options(jev):

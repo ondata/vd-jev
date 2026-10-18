@@ -1,11 +1,11 @@
-id	district	message	message_choice	message_choice_conf
-1	North	A tree has fallen across Elm Street after the storm and blocks both lanes.	noise	0.90
-2	Central	Please add a bench near the duck pond in Riverside Park.	noise	0.90
-3	East	The bar on Market Square plays loud music until 3am every night.	parks	0.90
-4	West			
-5	South	Large pothole on Main Street near the school; cars swerve into the other lane to avoid it.	roads	0.90
-6	North	Broken glass is scattered across the playground in Maple Park.	noise	0.90
-7	Central	Road works on King Street start at 5am and wake the whole block.	parks	0.90
-8	East	Could you repaint the faded lane markings on Oak Avenue?	noise	0.90
-9	West	The grass in Lincoln Park has not been mowed in a month.	noise	0.90
-10	South	A streetlight on the path through Central Park has been out for a week.	noise	0.90
+id	district	message	message_choice	message_choice_conf	message_choice_p
+1	North	A tree has fallen across Elm Street after the storm and blocks both lanes.	noise	0.90	{3} roads=0.05 parks=0.05 noise=0.9
+2	Central	Please add a bench near the duck pond in Riverside Park.	noise	0.90	{3} roads=0.05 parks=0.05 noise=0.9
+3	East	The bar on Market Square plays loud music until 3am every night.	parks	0.90	{3} roads=0.05 parks=0.9 noise=0.05
+4	West				
+5	South	Large pothole on Main Street near the school; cars swerve into the other lane to avoid it.	roads	0.90	{3} roads=0.9 parks=0.05 noise=0.05
+6	North	Broken glass is scattered across the playground in Maple Park.	noise	0.90	{3} roads=0.05 parks=0.05 noise=0.9
+7	Central	Road works on King Street start at 5am and wake the whole block.	parks	0.90	{3} roads=0.05 parks=0.9 noise=0.05
+8	East	Could you repaint the faded lane markings on Oak Avenue?	noise	0.90	{3} roads=0.05 parks=0.05 noise=0.9
+9	West	The grass in Lincoln Park has not been mowed in a month.	noise	0.90	{3} roads=0.05 parks=0.05 noise=0.9
+10	South	A streetlight on the path through Central Park has been out for a week.	noise	0.90	{3} roads=0.05 parks=0.05 noise=0.9
