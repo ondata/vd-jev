@@ -72,7 +72,7 @@ In VisiData this changes what you can do with a column of free text. Once the an
 <a id="requirements"></a>
 ## Requirements
 
-- VisiData 3.4 (Python 3.10 or later). No other package is needed.
+- VisiData 3.4 (Python 3.9 or later). No other package is needed.
 - An [OpenRouter](https://openrouter.ai/) account with some credit: every row is a paid request (see [Cost](#cost)).
 - An OpenRouter API key, created at <https://openrouter.ai/keys>, in the `OPENROUTER_API_KEY` environment variable of the shell that starts VisiData:
 

@@ -46,6 +46,7 @@ __version__ = '0.1.0'
 import concurrent.futures
 import json
 import os
+import socket
 import threading
 import time
 import urllib.error
@@ -206,7 +207,7 @@ def jev_send(body, api_key, url, timeout, retries=3):
             raise JevError(_http_error_message(e), status=e.code) from e
         except urllib.error.URLError as e:
             raise JevError(f'cannot reach OpenRouter: {e.reason}') from e
-        except TimeoutError as e:
+        except (TimeoutError, socket.timeout) as e:  # socket.timeout is not TimeoutError before Python 3.10
             raise JevError(f'no answer from OpenRouter within {timeout}s') from e
         except json.JSONDecodeError as e:
             raise JevError('answer from OpenRouter is not JSON') from e

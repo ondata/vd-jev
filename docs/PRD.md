@@ -235,7 +235,7 @@ Measuring accuracy on real data (ANAC, data.europa.eu) is left for after v1 (see
 <a id="testing"></a>
 ## Testing
 
-- **One entry point**: `uv run pytest` runs unit tests and `.vdx` replays; GitHub Actions runs it on Python 3.10 to 3.14.
+- **One entry point**: `uv run pytest` runs unit tests and `.vdx` replays; GitHub Actions runs it on Python 3.9 to 3.14.
 - **Unit tests** (`pytest`, no network): request body for each question type, label and level validation, parsing of each answer type; `send()` against a loopback `http.server` that plays scripted answers (`429`, errors, timeouts, malformed bodies), the same approach as VisiData's `tests/test-url.sh`.
 - **Live smoke test**: one real request per question type on a fixed sentence, marked `live` and skipped by default; run by hand with `uv run pytest -m live`, never in CI, since it costs money.
 - **VisiData batch replay**: `.vdx` command logs (format and `assert-expr` / `assert-cell` as in `saulpw/visidata/tests/*.vdx`) run in batch from pytest with `--config /dev/null`, against the loopback server; the saved sheet is compared with a golden file. This is the main integration test.
