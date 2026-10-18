@@ -72,7 +72,9 @@ Six commands, no default key bindings (same choice as `experimental/llm.py`), re
 | `jev-choice-column` / `jev-choice-selected` | all / selected | question, then labels separated by commas |
 | `jev-score-column` / `jev-score-selected` | all / selected | question, then levels from lowest to highest, separated by commas |
 
-The `*-selected` variants fail with a clear message when no rows are selected.
+VisiData allows one `input()` per command (`dev/STYLE.md`), so `choice` and `score` ask for the question and the labels in a single `vd.inputMultiple` prompt with two fields, as `features/regex.py` does for search and replace.
+
+The `*-selected` variants use `someSelectedRows`, which fails with `no rows selected` when nothing is selected.
 
 Validation before any request:
 
@@ -162,12 +164,10 @@ Request rules from the TypeSafe and OpenRouter docs:
 ```
 vd-jev/
   pyproject.toml          # package metadata, entry point, no runtime dependencies
-  vd_jev/
-    __init__.py           # imports the modules below
-    client.py             # build request, send it, retry on 429, parse answer; no VisiData imports
-    commands.py           # VisiData options, commands, menu, columns
+  vd_jev.py               # the plugin: options, Jev client, commands, menu
   tests/
-    test_client.py        # request building and answer parsing, no network
+    test_client.py        # pytest on the pure functions: request building, answer parsing, no network
+    *.vdx                 # batch replay tests of the commands
   demo/
     city_requests.csv     # didactic dataset (see below)
     expected.csv          # correct answers for the dataset
@@ -178,12 +178,12 @@ vd-jev/
   tasks/todo.md
 ```
 
-`client.py` has no dependency on VisiData, so it can be tested with plain `pytest` and reused. `commands.py` mirrors `experimental/llm.py`: `vd.option(...)`, `@Sheet.api` + `@asyncthread` worker, `Progress`, `vd.confirm`, `SettableColumn`, `Sheet.addCommand('', ...)`, `vd.addMenuItems(...)`. HTTP is done with the standard library (`urllib.request`, `json`, `concurrent.futures`), so the plugin runs on a base VisiData install with no extras: base VisiData 3.4 requires only `python-dateutil`, and `requests` comes only with its `[all]` extra. The TypeSafe SDK is not used.
+The plugin is one file, as `docs/api/plugins.rst` recommends and `experimental/llm.py` does, so it can be pip-installed, copied into the VisiData `plugins/` directory, or proposed upstream. The request building and answer parsing are plain functions, unit-tested with `pytest`; behaviour is tested with `.vdx` replays, as `dev/STYLE.md` asks. The layout mirrors `experimental/llm.py`: `vd.option(...)`, `@Sheet.api` + `@asyncthread` worker, `Progress`, `vd.confirm`, `SettableColumn`, `Sheet.addCommand('', ...)`, `vd.addMenuItems(...)`. HTTP is done with the standard library (`urllib.request`, `json`, `concurrent.futures`), so the plugin runs on a base VisiData install with no extras: base VisiData 3.4 requires only `python-dateutil`, and `requests` comes only with its `[all]` extra. The TypeSafe SDK is not used.
 
 <a id="installation"></a>
 ## Installation and loading
 
-VisiData 3.4 auto-loads every installed package that registers an entry point in the `visidata.plugins` group (`visidata/settings.py`). `pyproject.toml` declares:
+VisiData 3.4 auto-loads every installed package that registers an entry point in the `visidata.plugins` group (`visidata/settings.py`); this is the distribution route in `docs/plugins.md`. The older `visidata/dlc` registry and `plugins-sheet` are no longer used in 3.4. `pyproject.toml` declares:
 
 ```toml
 [project.entry-points."visidata.plugins"]
@@ -227,7 +227,7 @@ For volume tests (confirmation threshold, concurrency, progress, cancellation) a
 
 - **Unit tests** (`pytest`, no network): request body for each question type, label and level validation, parsing of each answer type, handling of `429` and of malformed answers (with a mocked HTTP layer).
 - **Live smoke test**: one real request per question type on a fixed sentence; run by hand, not in CI, since it costs money.
-- **VisiData batch replay**: `.vdj` command logs run with `vd -b -p test.vdj demo/city_requests.csv -o out.csv`, then checked with `duckdb`: result columns present, typed, values in range, empty cells skipped. This is the main integration test.
+- **VisiData batch replay**: `.vdx` command logs (format and `assert-expr` / `assert-cell` as in `saulpw/visidata/tests/*.vdx`) run with `vd -b --config /dev/null -p test.vdx demo/city_requests.csv -o out.csv`, then checked with `duckdb`: result columns present, typed, values in range, empty cells skipped. This is the main integration test.
 - **Accuracy check**: compare the output of each command on `demo/city_requests.csv` with `demo/expected.csv`; record results in `LOG.md`.
 - **Guided interactive test** with the user, on a step-by-step guide whose every step was checked beforehand (key bindings verified in the VisiData source or by replay).
 

@@ -8,7 +8,8 @@ A VisiData plugin that brings the ideas of MotherDuck's `prompt_jev()` into Visi
 - Repo: `~/git/vd-jev`, on GitHub as `aborruso/vd-jev`. Changed 2026-10-18 at the user's request: created private at the end of phase 1, made public in phase 5 once the plugin works.
 - Language: everything in the repo is in English, this plan included: code, comments, README, LOG, commit messages.
 - v1 scope: `noul`, `choice` and `score` questions on text, over the whole column or the selected rows only. Out of scope: `box`, images, `multiple_choice`.
-- Style reference: `visidata/experimental/llm.py` from VisiData 3.4.
+- Style reference: `visidata/experimental/llm.py` from VisiData 3.4, plus the official plugin docs: `docs/api/plugins.rst`, `docs/plugins.md`, `dev/STYLE.md`, `dev/TESTING.md` in `saulpw/visidata`, and the `visidata/visidata-plugin` template (copies in `tmp/vd-docs/`).
+- Distribution and layout (2026-10-18, from the official docs): a pip package with a `visidata.plugins` entry point, the route `docs/plugins.md` describes. The `visidata/dlc` registry and `plugins-sheet` are dead in 3.4 (`plugins_url` commented out in `visidata/deprecated.py`, `dlc` last commit 2022-03-12). The plugin is a single file, `vd_jev.py` (docstring, `__author__`, `__version__`, options at the top, commands at the bottom), as `docs/api/plugins.rst` and `experimental/llm.py` do: the same file can be pip-installed, copied into the VisiData `plugins/` directory, or proposed upstream under `experimental/`.
 - Dependencies (2026-10-18, changed): the plugin must run on a base VisiData install (`uv tool install visidata`, no extras) and add only what it strictly needs. Base VisiData 3.4 requires only `python-dateutil` (plus `standard-mailcap` on Python >= 3.13 and `windows-curses` on Windows); `requests` comes only with the `[all]` extra. HTTP is therefore done with the standard library (`urllib.request`, `json`, `concurrent.futures`): no runtime dependencies. The user's own extras stay on their machine but are never assumed by the plugin.
 
 ## Phase 1 - Repo skeleton
@@ -25,8 +26,9 @@ A VisiData plugin that brings the ideas of MotherDuck's `prompt_jev()` into Visi
 
 ## Phase 2 - Jev client
 
-- [ ] Function that builds the request (`state` = cell text, one question) and sends it with `urllib.request` (no `requests`); handles `429` with `retry-after`, timeouts, readable HTTP errors → check: `pytest` on request building (no network) and one real call per question type
-- [ ] VisiData options: `jev_model` (default `typesafe/jev-1.14`), `jev_api_url`, `jev_concurrency`, `jev_confirm_rows` (row count above which it asks for confirmation) → check: they appear in `Shift+O`
+- [ ] Turn the `vd_jev/` package into a single module `vd_jev.py`; add `__author__`; add `[dependency-groups] dev = ["pytest", "visidata"]` → check: `uv build` puts `vd_jev.py` at the wheel root (tested in `tmp/single`: works with no hatch config), replay in `tmp/base-venv` shows `visidata.plugins.jev` loaded
+- [ ] Pure functions in `vd_jev.py` that build the request (`state` = cell text, one question), send it with `urllib.request` (no `requests`), handle `429` with `retry-after`, timeouts, readable HTTP errors, and parse the answer; messages follow the 11 rules in `dev/STYLE.md` → check: `uv run pytest` on request building and parsing (no network, mocked HTTP) and one real call per question type
+- [ ] VisiData options: `jev_model` (default `typesafe/jev-1.14`), `jev_api_url`, `jev_concurrency`, `jev_confirm_rows` (row count above which it asks for confirmation), `jev_timeout` → check: they appear in `Shift+O` (checked by `.vdx` replay with `assert-expr` on `vd.options`)
 
 ## Phase 3 - VisiData commands
 
@@ -35,9 +37,9 @@ Test file for this phase: `demo/city_requests.csv` (see PRD, Demo dataset). For 
 - [ ] Write `demo/city_requests.csv` (~40 rows, English, a few empty messages) and `demo/expected.csv` (hazard, department, urgency per id); user reviews both → check: user approves; `duckdb` join on `id` matches every row
 - [ ] Generate `tmp/volume.csv` (1,000 rows) with `fauxdata generate --validate` → check: validation passes
 
-- [ ] `jev-noul-column` / `jev-noul-selected`: asks for the question, adds a `<col>_noul` column (float) → check: batch `.vdj` replay on the test file, column present, values between 0 and 1
-- [ ] `jev-choice-column` / `-selected`: asks for the question and comma-separated labels; adds `<col>_choice` (str), `<col>_confidence` (float), `<col>_jev_raw` (JSON, hidden) → check: batch replay, every `choice` is one of the given labels
-- [ ] `jev-score-column` / `-selected`: asks for the question and levels from lowest to highest; adds `<col>_score` (float), `<col>_confidence` → check: batch replay, `score` between 0 and n-1
+- [ ] `jev-noul-column` / `jev-noul-selected`: asks for the question, adds a `<col>_noul` column (float) → check: batch `.vdx` replay on the test file, column present, values between 0 and 1
+- [ ] `jev-choice-column` / `-selected`: asks for the question and comma-separated labels in one `vd.inputMultiple` prompt (STYLE.md: one `input()` per command; pattern from `features/regex.py`), wrapped in an `inputJev...()` helper kept in the execstr; adds `<col>_choice` (str), `<col>_confidence` (float), `<col>_jev_raw` (JSON, hidden) → check: batch replay, every `choice` is one of the given labels
+- [ ] `jev-score-column` / `-selected`: asks for the question and levels from lowest to highest in one `vd.inputMultiple` prompt; adds `<col>_score` (float), `<col>_confidence` → check: batch replay, `score` between 0 and n-1
 - [ ] Empty cells skipped, confirmation above the row threshold, `Progress` bar, final summary with rows, errors and cost (`usage.cost`) → check: replay on a file with empty cells; summary counts are correct
 - [ ] Menu entries under Column > Jev → check: visible in the menu
 
