@@ -217,16 +217,18 @@ The same columns turn the plugin into a data quality check. When the model is ve
 z|   objective_choice != field and objective_choice_conf >= 0.95
 ```
 
-selects 85 of the 1,000 projects. Reading them, some official labels are hard to defend, and each one seems to come from a single word of the objective taken out of context:
+selects 85 of the 1,000 projects. In some of them the official label looks surprising next to the objective, and matches a single word of it:
 
-| Project | Field of science in CORDIS | Word in the objective | Plugin |
+| Project | Field of science in CORDIS | A word in the objective that matches it | Plugin |
 |---|---|---|---|
 | [Pulsehaler](https://cordis.europa.eu/project/id/968565), a device to treat COPD | sociology / demography / mortality | "kills 160,000 every year" | medical and health sciences (1.00) |
 | [e2CORK](https://cordis.europa.eu/project/id/673635), surfboard blanks made of cork | astronomy / planetary sciences / planets | "carbon footprint on our planet" | engineering and technology (1.00) |
 | [HYPERNEX](https://cordis.europa.eu/project/id/101015145), a European hyperloop network | ecology / ecosystems; catalysis | "the need for a catalyst", "R&D ecosystem" | engineering and technology (1.00) |
 | [ACROBA](https://cordis.europa.eu/project/id/101017284), cognitive robots for production lines | ecology / ecosystems | "production environments" | engineering and technology (0.98) |
 
-Not every selected row is an error in the official data: in others the model is wrong, or the project sits between two fields. The selection is a short list to read instead of 1,000 rows, and what survives the reading is something to send to the publisher, with the links.
+This is a demonstration of what the plugin makes possible, not evidence that these four labels are wrong. The model read only the text in the CSV (the objective); CORDIS may classify a project using much more of what is available about it online, such as keywords, publications and deliverables, and on a closer look its labels may well be right. Other selected rows are errors of the model, or projects that sit between two fields.
+
+What the selection gives is a short list to read instead of 1,000 rows. After checking each case against the full project record, what still looks wrong is something to ask the publisher about, with the links.
 
 <a id="choosing-a-model"></a>
 ## Choosing a model
