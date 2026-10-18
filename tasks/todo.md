@@ -9,19 +9,23 @@ A VisiData plugin that brings the ideas of MotherDuck's `prompt_jev()` into Visi
 - Language: everything in the repo is in English, this plan included: code, comments, README, LOG, commit messages.
 - v1 scope: `noul`, `choice` and `score` questions on text, over the whole column or the selected rows only. Out of scope: `box`, images, `multiple_choice`.
 - Style reference: `visidata/experimental/llm.py` from VisiData 3.4.
+- Dependencies (2026-10-18, changed): the plugin must run on a base VisiData install (`uv tool install visidata`, no extras) and add only what it strictly needs. Base VisiData 3.4 requires only `python-dateutil` (plus `standard-mailcap` on Python >= 3.13 and `windows-curses` on Windows); `requests` comes only with the `[all]` extra. HTTP is therefore done with the standard library (`urllib.request`, `json`, `concurrent.futures`): no runtime dependencies. The user's own extras stay on their machine but are never assumed by the plugin.
 
 ## Phase 1 - Repo skeleton
 
 - [x] `git init`, `.gitignore` (`tmp/`), `README.md`, `LOG.md`, `LICENSE` (GPL-3.0-only, same as VisiData) → check: clean `git status` after the first commit
   - Done 2026-10-18, commit `Repo skeleton`; `git status --short` empty. `.gitignore` also covers `__pycache__/`, `*.egg-info/`, `dist/`, `.venv/`. `LICENSE` is the FSF text from `/usr/share/common-licenses/GPL-3` (VisiData's copy differs only in `http` vs `https` URLs).
 - [x] `pyproject.toml` with entry point `[project.entry-points."visidata.plugins"] jev = "vd_jev"` and a `requests` dependency → check: `uv build` produces a wheel without errors
+  - Superseded on 2026-10-18 by the next step: the `requests` dependency is dropped.
   - Done 2026-10-18, hatchling backend, SPDX `license = "GPL-3.0-only"`. `uv build -o tmp/dist` builds sdist and wheel; wheel `entry_points.txt` holds `[visidata.plugins] jev = vd_jev`.
+- [x] Drop `requests` from `pyproject.toml` (`dependencies = []`), fix README → check: in a clean venv `tmp/base-venv` with `uv pip install visidata ./`, `uv pip list` shows only VisiData's own dependencies plus `vd-jev`, and the `.vdj` replay shows `visidata.plugins.jev` loaded
+  - Done 2026-10-18. `uv pip list` in `tmp/base-venv`: `python-dateutil`, `six` (needed by `python-dateutil`), `standard-mailcap`, `visidata` 3.4, `vd-jev` 0.1.0; `import requests` fails there. `tmp/base-venv/bin/vd -b --config /dev/null -p tmp/check_plugin.vdj` exits 0 and shows `visidata.plugins.jev` = `vd_jev` (`--config /dev/null` skips the user's `~/.visidatarc`, which imports extras missing from that venv).
 - [x] Install into VisiData's environment with `uv tool install visidata --reinstall --with-editable ~/git/vd-jev` plus all 10 current extras (`humanize pyarrow fuzzywuzzy python-levenshtein duckdb sqlite-utils openpyxl requests pyshp pyyaml`) → check: `uv tool list --show-with` lists all 11, and `vd` starts without a `plugin jev failed to load` warning
   - Done 2026-10-18. Extras checked first in `uv-receipt.toml` (same 10). `uv tool list --show-with` shows the 10 extras plus `vd-jev` (editable). `vd -b tmp/x.csv -o tmp/out.csv` exits 0 with no output; replay `tmp/check_plugin.vdj` (`exec-python`) shows `sys.modules['visidata.plugins.jev']` = `vd_jev` from `~/git/vd-jev/vd_jev/__init__.py`.
 
 ## Phase 2 - Jev client
 
-- [ ] Function that builds the request (`state` = cell text, one question) and sends it; handles `429` with `retry-after`, timeouts, readable HTTP errors → check: `pytest` on request building (no network) and one real call per question type
+- [ ] Function that builds the request (`state` = cell text, one question) and sends it with `urllib.request` (no `requests`); handles `429` with `retry-after`, timeouts, readable HTTP errors → check: `pytest` on request building (no network) and one real call per question type
 - [ ] VisiData options: `jev_model` (default `typesafe/jev-1.14`), `jev_api_url`, `jev_concurrency`, `jev_confirm_rows` (row count above which it asks for confirmation) → check: they appear in `Shift+O`
 
 ## Phase 3 - VisiData commands

@@ -7,7 +7,7 @@ license = "GPL-3.0-only"
 license-files = ["LICENSE"]
 authors = [{ name = "Andrea Borruso", email = "aborruso@gmail.com" }]
 requires-python = ">=3.10"
-dependencies = ["requests"]
+dependencies = []
 
 [project.urls]
 Homepage = "https://github.com/aborruso/vd-jev"

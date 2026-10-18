@@ -161,7 +161,7 @@ Request rules from the TypeSafe and OpenRouter docs:
 
 ```
 vd-jev/
-  pyproject.toml          # package metadata, entry point, dependency on requests
+  pyproject.toml          # package metadata, entry point, no runtime dependencies
   vd_jev/
     __init__.py           # imports the modules below
     client.py             # build request, send it, retry on 429, parse answer; no VisiData imports
@@ -178,7 +178,7 @@ vd-jev/
   tasks/todo.md
 ```
 
-`client.py` has no dependency on VisiData, so it can be tested with plain `pytest` and reused. `commands.py` mirrors `experimental/llm.py`: `vd.option(...)`, `@Sheet.api` + `@asyncthread` worker, `Progress`, `vd.confirm`, `SettableColumn`, `Sheet.addCommand('', ...)`, `vd.addMenuItems(...)`. HTTP is done with `requests`, already present in the VisiData environment; the TypeSafe SDK is not used.
+`client.py` has no dependency on VisiData, so it can be tested with plain `pytest` and reused. `commands.py` mirrors `experimental/llm.py`: `vd.option(...)`, `@Sheet.api` + `@asyncthread` worker, `Progress`, `vd.confirm`, `SettableColumn`, `Sheet.addCommand('', ...)`, `vd.addMenuItems(...)`. HTTP is done with the standard library (`urllib.request`, `json`, `concurrent.futures`), so the plugin runs on a base VisiData install with no extras: base VisiData 3.4 requires only `python-dateutil`, and `requests` comes only with its `[all]` extra. The TypeSafe SDK is not used.
 
 <a id="installation"></a>
 ## Installation and loading
@@ -190,7 +190,9 @@ VisiData 3.4 auto-loads every installed package that registers an entry point in
 jev = "vd_jev"
 ```
 
-On the development machine VisiData is a `uv tool` with ten extra packages. Reinstalling it drops any extra that is not passed again, and `.visidatarc` imports `humanize` and `fuzzywuzzy`, so the install line must repeat all of them:
+The plugin needs nothing beyond base VisiData: for end users, `uv tool install visidata --with vd-jev` (or `--with-editable` for a local clone) is enough.
+
+On the development machine VisiData is a `uv tool` with ten extra packages, which are the user's own choice and are not required by the plugin. Reinstalling it drops any extra that is not passed again, and `.visidatarc` imports `humanize` and `fuzzywuzzy`, so the install line must repeat all of them:
 
 ```bash
 uv tool install visidata --reinstall \
@@ -200,7 +202,7 @@ uv tool install visidata --reinstall \
   --with-editable ~/git/vd-jev
 ```
 
-The current list is in `$(uv tool dir)/visidata/uv-receipt.toml`; check it before reinstalling. For end users the README documents the short form: `uv tool install visidata --with vd-jev` (once published) or `--with-editable` for a local clone.
+The current list is in `$(uv tool dir)/visidata/uv-receipt.toml`; check it before reinstalling.
 
 <a id="dataset"></a>
 ## Demo dataset

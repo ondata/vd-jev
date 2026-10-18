@@ -8,11 +8,13 @@ Status: under development, not usable yet. See [PRD.md](PRD.md) for the requirem
 
 ## Installation (development)
 
+The plugin needs nothing beyond a base VisiData install: it has no runtime dependencies.
+
 ```bash
 uv tool install visidata --with-editable ~/git/vd-jev
 ```
 
-`uv tool install --reinstall` drops any extra package that is not passed again: repeat every `--with` you already use.
+If VisiData is already installed as a `uv tool` with extra packages, add `--reinstall` and repeat every `--with` you already use: reinstalling drops any extra that is not passed again.
 
 ## License
 
