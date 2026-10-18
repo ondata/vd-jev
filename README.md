@@ -10,6 +10,7 @@ It brings to VisiData the idea behind MotherDuck's [`prompt_jev()`](https://moth
 
 ## Contents
 
+- [Why a decision model](#why)
 - [Requirements](#requirements)
 - [Installation](#installation)
 - [What it does](#what-it-does)
@@ -19,6 +20,23 @@ It brings to VisiData the idea behind MotherDuck's [`prompt_jev()`](https://moth
 - [Options](#options)
 - [Tests](#tests)
 - [License](#license)
+
+<a id="why"></a>
+## Why a decision model
+
+If you love VisiData but have not used AI models much with it, this is the simplest place to start.
+
+The AI models most people know are chat models: you write a prompt, they write text back. Text is hard to put in a table: it has to be read, parsed, checked. Decision models such as Jev work the other way round. You ask a closed question and they never answer with text, only with a quick, typed classification:
+
+| You ask, about each message | You get back | Kind |
+|---|---|---|
+| Does the message report a safety hazard? | `0.97`: the probability that the answer is yes | yes/no |
+| Which department should handle this? `roads, parks, noise` | `roads`: one of your labels, with a confidence | one label |
+| How urgent is this request? `low < medium < high` | `1.96`: a place on your scale, from 0 to 2, with a confidence | ordered scale |
+
+The answers above are the real ones for "A tree has fallen across Elm Street after the storm and blocks both lanes", from the demo file.
+
+In VisiData this changes what you can do with a column of free text. Once the answers are columns, everything you already know applies: `Shift+F` counts the requests per department, `[` and `]` sort by urgency, `z|` selects the hazards, or the rows where the model is unsure (low confidence), so you read by hand only those. Tickets to route, survey answers to code, complaints to triage, descriptions to tag: a few cents for thousands of rows (see [Cost](#cost)), instead of reading them all.
 
 <a id="requirements"></a>
 ## Requirements
