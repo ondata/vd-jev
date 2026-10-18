@@ -225,8 +225,9 @@ For volume tests (confirmation threshold, concurrency, progress, cancellation) a
 <a id="testing"></a>
 ## Testing
 
-- **Unit tests** (`pytest`, no network): request body for each question type, label and level validation, parsing of each answer type, handling of `429` and of malformed answers (with a mocked HTTP layer).
-- **Live smoke test**: one real request per question type on a fixed sentence; run by hand, not in CI, since it costs money.
+- **One entry point**: `uv run pytest` runs unit tests and `.vdx` replays; GitHub Actions runs it on Python 3.10 to 3.14.
+- **Unit tests** (`pytest`, no network): request body for each question type, label and level validation, parsing of each answer type; `send()` against a loopback `http.server` that plays scripted answers (`429`, errors, timeouts, malformed bodies), the same approach as VisiData's `tests/test-url.sh`.
+- **Live smoke test**: one real request per question type on a fixed sentence, marked `live` and skipped by default; run by hand with `uv run pytest -m live`, never in CI, since it costs money.
 - **VisiData batch replay**: `.vdx` command logs (format and `assert-expr` / `assert-cell` as in `saulpw/visidata/tests/*.vdx`) run with `vd -b --config /dev/null -p test.vdx demo/city_requests.csv -o out.csv`, then checked with `duckdb`: result columns present, typed, values in range, empty cells skipped. This is the main integration test.
 - **Accuracy check**: compare the output of each command on `demo/city_requests.csv` with `demo/expected.csv`; record results in `LOG.md`.
 - **Guided interactive test** with the user, on a step-by-step guide whose every step was checked beforehand (key bindings verified in the VisiData source or by replay).
