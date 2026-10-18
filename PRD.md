@@ -35,6 +35,7 @@ vd-jev is a VisiData plugin that asks closed questions about every cell of a tex
 
 Goals for v1:
 
+- Interesting, easy and usable: someone who has never heard of Jev understands in a few seconds what the plugin does and how to use it. The README opens with a short terminal recording made with [VHS](https://github.com/charmbracelet/vhs) on the demo dataset: one question, the new columns, then a frequency table or a sort by confidence.
 - Three question types, `noul`, `choice` and `score`, through two commands (`jev-column`, `jev-selected`) and one prompt: the type comes from what the user writes in `answers`.
 - Typed result columns that VisiData can sort, filter, aggregate and use in frequency tables right away.
 - Calibrated confidence exposed as a column, so users can filter or select low-confidence rows for manual review.
@@ -251,7 +252,7 @@ The detailed checklist, with a verification for every step, is in [`tasks/todo.m
 2. `client.py` with unit tests and a live smoke test.
 3. VisiData commands, tested by batch replay.
 4. Real calls on the demo dataset, guided interactive test.
-5. README and publication on GitHub as `aborruso/vd-jev`.
+5. README with the VHS recording, and publication on GitHub as `aborruso/vd-jev`.
 
 <a id="open-questions"></a>
 ## Open questions

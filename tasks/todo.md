@@ -61,6 +61,7 @@ Decided with the user on 2026-10-18: the question type comes from what the user 
 
 - [x] Create `aborruso/vd-jev` on GitHub (private) and push → check: `gh repo view` shows it private, `main` pushed
   - Done 2026-10-18, see LOG.
+- [ ] VHS recording (`demo/demo.tape` -> `demo/demo.gif`, VHS v0.11.0 installed in `~/go/bin`, ttyd and ffmpeg present): `vd demo/city_requests.csv`, `jev-column` with one question, the new columns, then `Shift+F` on the choice column or a sort by confidence; real calls on 3 rows (~0.00004 USD per take); every key in the tape checked in the VisiData source or by replay first → check: `vhs demo/demo.tape` produces the GIF; user reviews it
 - [ ] Make `aborruso/vd-jev` public, after explicit user confirmation → check: repo visible logged out, README renders
 - [ ] README with `uv tool` install, examples, indicative costs, and a note that cell text is sent to OpenRouter/TypeSafe (USA)
 
