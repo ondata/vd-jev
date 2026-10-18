@@ -2,6 +2,8 @@
 
 ## 2026-10-18
 
+- Phase 2: plugin is one file, `vd_jev.py` (official plugin docs); stdlib Jev client; five `jev_*` options. Tests: `uv run pytest` (unit tests, loopback HTTP server, `.vdx` replays in batch), `-m live` for real calls, GitHub Actions on Python 3.10-3.14. Live check: noul 0.98, choice `roads` 0.99, score 1.98/2, ~0.000013 USD per call.
+- `visidata/dlc` plugin registry and `plugins-sheet` are dead in VisiData 3.4; pip entry point is the current route.
 - GitHub repo `aborruso/vd-jev` created private, `main` pushed; to be made public in phase 5.
 - No runtime dependencies: `requests` dropped, HTTP will use `urllib.request`. Base VisiData 3.4 does not ship `requests` (only its `[all]` extra does). Checked in a clean venv with only `visidata` and `vd-jev`: plugin loads.
 - Phase 1: repo skeleton (`git init`, `.gitignore`, `README.md`, `LOG.md`, `LICENSE` GPL-3.0-only), `pyproject.toml` with `visidata.plugins` entry point `jev = "vd_jev"` and `requests` dependency.

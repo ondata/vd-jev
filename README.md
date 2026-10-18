@@ -16,6 +16,15 @@ uv tool install visidata --with-editable ~/git/vd-jev
 
 If VisiData is already installed as a `uv tool` with extra packages, add `--reinstall` and repeat every `--with` you already use: reinstalling drops any extra that is not passed again.
 
+## Tests
+
+```bash
+uv run pytest            # unit tests and .vdx replays, no network
+uv run pytest -m live    # one real call per question type; needs OPENROUTER_API_KEY, costs about 0.00004 USD
+```
+
+HTTP is tested against a local server that plays scripted answers. `.vdx` replays run in batch with `--config /dev/null`, so your own `.visidatarc` is not involved.
+
 ## License
 
 GPL-3.0-only, same as VisiData.
