@@ -1,13 +1,14 @@
 [project]
 name = "vd-jev"
 version = "0.1.0"
-description = "VisiData plugin: closed questions over a text column with Jev (TypeSafe) via OpenRouter"
+description = "VisiData plugin: ask a closed question about every row of a text column with a decision model (Jev or any other on OpenRouter) and get typed columns back: a probability, a label or a point on a scale, each with its confidence."
 readme = "README.md"
 license = "GPL-3.0-only"
 license-files = ["LICENSE"]
 authors = [{ name = "Andrea Borruso", email = "aborruso@gmail.com" }]
 requires-python = ">=3.9"
 dependencies = []
+keywords = ["visidata", "visidata-plugin", "decision-models", "jev", "typesafe", "openrouter", "text-classification", "llm", "cli", "terminal", "data"]
 
 [project.urls]
 Homepage = "https://github.com/ondata/vd-jev"

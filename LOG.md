@@ -2,6 +2,7 @@
 
 ## 2026-10-18
 
+- Repo metadata: GitHub description and 12 topics set; `pyproject.toml` description aligned with GitHub, `keywords` added.
 - Announced in the VisiData discussions, "Show and tell": https://github.com/saulpw/visidata/discussions/3249 (asks whether the `visidata/dlc` plugin list is still in use).
 - Release v0.1.0 on `79f5736` (https://github.com/ondata/vd-jev/releases/tag/v0.1.0); install from the tag checked in a clean venv. Announcement draft for the VisiData "Show and tell" discussions kept outside the repo, install line pinned to `@v0.1.0`.
 - Python 3.9 supported, as VisiData is: `requires-python >= 3.9`, 3.9 added to CI. Running the suite on 3.9 found a real bug: a read timeout raises `socket.timeout`, which is not `TimeoutError` before 3.10, so it escaped as a generic error; now caught.
