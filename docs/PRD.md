@@ -258,7 +258,7 @@ The detailed checklist, with a verification for every step, is in [`todo.md`](to
 2. `client.py` with unit tests and a live smoke test.
 3. VisiData commands, tested by batch replay.
 4. Real calls on the demo dataset, guided interactive test.
-5. README with the VHS recording, and publication on GitHub as `aborruso/vd-jev`.
+5. README with the VHS recording, and publication on GitHub as `ondata/vd-jev` (moved from `aborruso/vd-jev` on 2026-10-18).
 
 <a id="open-questions"></a>
 ## Open questions

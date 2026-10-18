@@ -85,7 +85,7 @@ The plugin checks these before sending anything. Without the key, the command st
 The plugin is a single file with no dependencies beyond VisiData itself, and VisiData loads it automatically.
 
 ```bash
-uv tool install visidata --with git+https://github.com/aborruso/vd-jev
+uv tool install visidata --with git+https://github.com/ondata/vd-jev
 ```
 
 or, from a local clone:
@@ -161,6 +161,26 @@ Compared with `main_activity = Health`, at a 0.5 threshold:
 - the three wrong yeses are all one education and training board, at 0.53 to 0.61, just above the threshold.
 
 What this shows: the model judges only what is in the cell, and its yes is reliable; when the cell does not hold the information, ask about another column or accept that no question will find it.
+
+Label descriptions make a large difference on the second question. The same labels, each with a description in parentheses:
+
+```
+municipality or local government (county, city and town councils, local authorities),
+hospital or health service (hospitals, clinics, national or regional health services that run care),
+school or university (schools, colleges, universities, institutes of technology, education and training boards),
+national ministry or agency (government departments, national agencies, regulators, central purchasing bodies),
+utility or transport company (energy, water, waste, rail, bus, ports, airports),
+other (charities, foundations, private companies, anything else)
+```
+
+(one line in the form; split here to read it). Against `main_activity`, leaving out Malta's "Department of Contracts":
+
+| `main_activity` | Rows | Labelled as expected, without descriptions | With descriptions |
+|---|---|---|---|
+| Education, expected `school or university` | 264 | 196 (74%) | 233 (88%) |
+| Health, expected `hospital or health service` | 66 | 28 (42%) | 56 (85%) |
+
+The education and training boards moved from `municipality or local government` to `school or university` (35 rows), and the Health Service Executive from `national ministry or agency` to `hospital or health service` (28 rows). The descriptions name kinds of organisations, not the buyers in the file. Scripts: `demo/ted_questions.py`, `demo/ted_descriptions.py`.
 
 <a id="choosing-a-model"></a>
 ## Choosing a model

@@ -10,7 +10,7 @@ requires-python = ">=3.10"
 dependencies = []
 
 [project.urls]
-Homepage = "https://github.com/aborruso/vd-jev"
+Homepage = "https://github.com/ondata/vd-jev"
 
 [project.entry-points."visidata.plugins"]
 jev = "vd_jev"
