@@ -5,7 +5,7 @@ A VisiData plugin that brings the ideas of MotherDuck's `prompt_jev()` into Visi
 ## Decisions (2026-10-18)
 
 - Engine: Jev via OpenRouter, `POST https://openrouter.ai/api/v1/systemone`, key in `OPENROUTER_API_KEY`. Checked with a real call: an Italian tender description returned `choice` = `lavori` (p=1), `noul` urgency = 0.09, cost 0.000016 USD.
-- Repo: `~/git/vd-jev`, public on GitHub as `aborruso/vd-jev`, created only after this plan is approved.
+- Repo: `~/git/vd-jev`, on GitHub as `aborruso/vd-jev`. Changed 2026-10-18 at the user's request: created private at the end of phase 1, made public in phase 5 once the plugin works.
 - Language: everything in the repo is in English, this plan included: code, comments, README, LOG, commit messages.
 - v1 scope: `noul`, `choice` and `score` questions on text, over the whole column or the selected rows only. Out of scope: `box`, images, `multiple_choice`.
 - Style reference: `visidata/experimental/llm.py` from VisiData 3.4.
@@ -48,7 +48,9 @@ Test file for this phase: `demo/city_requests.csv` (see PRD, Demo dataset). For 
 
 ## Phase 5 - Publication
 
-- [ ] Create `aborruso/vd-jev` on GitHub and push → check: repo visible, README renders
+- [x] Create `aborruso/vd-jev` on GitHub (private) and push → check: `gh repo view` shows it private, `main` pushed
+  - Done 2026-10-18, see LOG.
+- [ ] Make `aborruso/vd-jev` public, after explicit user confirmation → check: repo visible logged out, README renders
 - [ ] README with `uv tool` install, examples, indicative costs, and a note that cell text is sent to OpenRouter/TypeSafe (USA)
 
 ## After v1 (not in this plan)
