@@ -1,3 +1,8 @@
+[![GitHub](https://img.shields.io/badge/github-ondata%2Fvd--jev-blue?logo=github)](https://github.com/ondata/vd-jev)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/ondata/vd-jev)
+[![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![Newsletter](https://img.shields.io/badge/newsletter-ondata-FF6719?logo=substack)](https://ondata.substack.com/)
+
 # vd-jev
 
 [VisiData](https://www.visidata.org/) is a terminal tool for exploring and arranging tabular data. It opens CSV, TSV, JSON, SQLite, Excel, Parquet and many other formats, and a few keystrokes are enough to sort, filter, aggregate, pivot, plot and save them. It is a wonderful tool for anyone who has to explore, look at and summarize structured data.
