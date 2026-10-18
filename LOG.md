@@ -2,6 +2,7 @@
 
 ## 2026-10-18
 
+- Demo recorded at 2x (3000x1120, font 30) into MP4 with a higher-contrast command palette (`--color-cmdpalette='255 white on 236' --color-match='bold 215'`); GIF built from it at 1500 px, 256 colours. Two failures on the way: VHS at 50 fps dropped frames (sped-up video), and its 3000x1120 GIF palette step was OOM-killed (>11 GB). README opens with what VisiData is. `PRD.md` and `todo.md` moved to `docs/`.
 - Demo GIF slowed down (90 ms typing, pauses after question, answers, command name and results) and re-encoded with ffmpeg via `demo/record.sh`: XnView refused VHS's 1x1-delta GIF.
 - README actually rewritten (the previous commit `5b9f93e` claimed it but the write had failed): requirements (OpenRouter account, credit, `OPENROUTER_API_KEY`), install, usage, model choice, cost, privacy, options. Run now stops at the first HTTP 401 (bad key, checked live: `User not found`) or 402 (no credit, per OpenRouter docs, tested on the fake only) with a hint; 403 is not a stop code, OpenRouter uses it for moderation of a single input.
 - Cursor now stays on the source column after `jev-column` (test first, failed, then fixed). Demo extended to 10 rows. VHS recording `demo/demo.gif` from `demo/demo.tape`. README rewritten with GIF, usage, costs (Jev ~0.000012 USD/row, Perplexity Decider Flash ~0.000001), privacy, options.

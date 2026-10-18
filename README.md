@@ -1,6 +1,8 @@
 # vd-jev
 
-A [VisiData](https://www.visidata.org/) plugin that asks closed questions about every cell of a text column and writes the answers back as typed columns: a probability (yes/no), a label from a fixed list, or a position on an ordered scale, each with a calibrated confidence. Answers come from Jev, TypeSafe's decision model, by default, or from any other decision model on [OpenRouter](https://openrouter.ai/docs/guides/community/jev).
+[VisiData](https://www.visidata.org/) is a terminal tool for exploring and arranging tabular data. It opens CSV, TSV, JSON, SQLite, Excel, Parquet and many other formats, and a few keystrokes are enough to sort, filter, aggregate, pivot, plot and save them. It is a wonderful tool for anyone who has to explore, look at and summarize structured data.
+
+vd-jev is a VisiData plugin that asks closed questions about every cell of a text column and writes the answers back as typed columns: a probability (yes/no), a label from a fixed list, or a position on an ordered scale, each with a calibrated confidence. Answers come from Jev, TypeSafe's decision model, by default, or from any other decision model on [OpenRouter](https://openrouter.ai/docs/guides/community/jev).
 
 It brings to VisiData the idea behind MotherDuck's [`prompt_jev()`](https://motherduck.com/docs/sql-reference/motherduck-sql-reference/ai-functions/prompt-jev/) SQL function.
 

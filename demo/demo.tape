@@ -1,20 +1,22 @@
 # vd-jev demo: run demo/record.sh from the repo root (real calls, ~0.0004 USD)
 
-Output tmp/demo-vhs.gif
+Output tmp/demo-vhs.mp4
 
 Require vd
 
 Set Shell "bash"
-Set FontSize 15
-Set Width 1500
-Set Height 560
-Set Padding 16
+Set FontSize 30
+Set Width 3000
+Set Height 1120
+Set Padding 32
 Set TypingSpeed 90ms
+Set Framerate 20
 Set Theme "Dracula"
 Set WaitTimeout 60s
 
 Hide
-Type "vd --config /dev/null demo/city_requests.csv"
+# higher-contrast command palette: orange match on dark grey instead of red on green
+Type "vd --config /dev/null --color-cmdpalette='255 white on 236' --color-match='bold 215' demo/city_requests.csv"
 Enter
 Wait+Screen /city_requests/
 Show

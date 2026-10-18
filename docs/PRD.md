@@ -182,11 +182,14 @@ vd-jev/
     golden/               # expected saved sheets
   demo/
     city_requests.csv     # tiny didactic dataset (see below)
+    demo.tape, record.sh  # VHS recording of the README GIF
+    demo.gif
+  docs/
+    PRD.md                # this document
+    todo.md               # plan, phases, checks
   README.md
   LOG.md
-  PRD.md
   LICENSE                 # GPL-3.0-only, same as VisiData
-  tasks/todo.md
 ```
 
 The plugin is one file, as `docs/api/plugins.rst` recommends and `experimental/llm.py` does, so it can be pip-installed, copied into the VisiData `plugins/` directory, or proposed upstream. The request building and answer parsing are plain functions, unit-tested with `pytest`; behaviour is tested with `.vdx` replays, as `dev/STYLE.md` asks. The layout mirrors `experimental/llm.py`: `vd.option(...)`, `@Sheet.api` + `@asyncthread` worker, `Progress`, `vd.confirm`, `SettableColumn`, `Sheet.addCommand('', ...)`, `vd.addMenuItems(...)`. HTTP is done with the standard library (`urllib.request`, `json`, `concurrent.futures`), so the plugin runs on a base VisiData install with no extras: base VisiData 3.4 requires only `python-dateutil`, and `requests` comes only with its `[all]` extra. The TypeSafe SDK is not used.
@@ -249,7 +252,7 @@ Measuring accuracy on real data (ANAC, data.europa.eu) is left for after v1 (see
 <a id="milestones"></a>
 ## Milestones
 
-The detailed checklist, with a verification for every step, is in [`tasks/todo.md`](tasks/todo.md).
+The detailed checklist, with a verification for every step, is in [`todo.md`](todo.md).
 
 1. Repo skeleton, packaging, install into VisiData's environment.
 2. `client.py` with unit tests and a live smoke test.
