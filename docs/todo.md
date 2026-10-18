@@ -89,6 +89,17 @@ Descriptions are machine to machine: the model reads them to tell similar labels
 - [x] README: how to write descriptions, and that they are not returned → check: read through
   - Done 2026-10-18: 75 tests + 4 live pass. Live comparison on the 9 demo messages (`Which department`, Jev 1.14): 7 clear messages unchanged; streetlight in park `parks` 0.89 -> `roads` 0.52 with "street lighting" under roads; road works `roads` 0.77 -> `roads` 0.46 with noise = "anything that disturbs rest". The user asked whether descriptions were useless; after the comparison chose to keep them.
 
+## Phase 4e - Real data: TED (2026-10-18, asked by the user)
+
+Source: "Tenders Electronic Daily (TED) (csv subset)", European Commission DG GROW, data.europa.eu dataset `ted-csv`, file "TED - Contract notices 2022", licence CC BY 4.0 (per distribution; other years are COM_REUSE). No title or description column; free text is in `CAE_NAME` (buyer) and `CRIT_CRITERIA` (award criteria, 267 of 1000 notices). `MAIN_ACTIVITY` is filled in by the buyer and serves as a reference.
+
+- [x] 1000 random notices (one row per notice, reservoir sample, seed 42) → `demo/ted_sample.csv` with the columns used; attribution in README → check: 1000 rows, 1000 distinct notices
+  - First draft on all countries (24 languages, 4 questions, results in LOG); the user asked for something simpler, so the sample was redrawn on English-language notices only (IE 723, MT 234, UK 43; 55 with award criteria) and the questions cut to three.
+- [x] Ask with `jev-column` in batch: (1) green criterion, noul, on `CRIT_CRITERIA`; (2) kind of first non-price criterion, choice with `other`; (3) buyer is a health care provider, noul, on `CAE_NAME`; (4) kind of buyer, choice with `other` → check: run summary (answered, skipped, errors, cost), output saved
+- [x] Accuracy of (3) against `MAIN_ACTIVITY = Health`, threshold 0.5, plus a read of the disagreements; spot check of (1), (2), (4) → check: numbers in LOG
+- [x] README section on the TED example → check: read through
+  - Done 2026-10-18 (`demo/ted_questions.py`, in-process through `jevAsk`): health noul 1000 rows 45 s 0.0119 USD; buyer kind 1000 rows 44 s 0.0141 USD; green criterion 55 rows 0.0007 USD; 0 errors. Health vs `main_activity`: precision 56/59, recall 56/120, 54 of the 64 misses are Malta's "Department of Contracts" (recall 56/66 without it); 3 false positives, one ETB.
+
 ## Phase 5 - Publication
 
 - [x] Create `aborruso/vd-jev` on GitHub (private) and push → check: `gh repo view` shows it private, `main` pushed

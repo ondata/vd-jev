@@ -16,6 +16,7 @@ It brings to VisiData the idea behind MotherDuck's [`prompt_jev()`](https://moth
 - [Requirements](#requirements)
 - [Installation](#installation)
 - [What it does](#what-it-does)
+- [A real example: EU public procurement](#ted)
 - [Choosing a model](#choosing-a-model)
 - [Cost](#cost)
 - [Privacy](#privacy)
@@ -117,6 +118,8 @@ low (can wait) < medium (this week) < high (danger now)
 
 On the demo file this changes only the borderline rows. Without descriptions, "A streetlight on the path through Central Park has been out for a week" goes to `parks` (confidence 0.89); with "street lighting" under `roads`, it goes to `roads` (0.52). Clear messages keep the same label.
 
+When your labels might not cover every row, add an `other` label, as TypeSafe recommends: otherwise the model has to pick one of the labels it is given, even when none fits.
+
 The rest works as usual. Empty cells are skipped. The cursor stays on the text column, so you can ask the next question right away; a status message reports rows answered, skipped, errors and cost. Each run also adds a hidden `_raw` column with the full answer as JSON, or the error for that row: `gv` shows hidden columns. VisiData saves only visible columns, so show `_raw` before saving if you want to keep it.
 
 The new columns are ordinary VisiData columns. In the demo above:
@@ -130,6 +133,34 @@ Try it on the demo file:
 ```bash
 vd demo/city_requests.csv
 ```
+
+<a id="ted"></a>
+## A real example: EU public procurement
+
+`demo/ted_sample.csv` holds 1,000 random contract notices published in 2022 by buyers in Ireland, Malta and the United Kingdom, all in English: who is buying (`buyer`), its main activity as declared by the buyer itself (`main_activity`), and, for 55 notices, the award criteria (`award_criteria`). Source: [Tenders Electronic Daily (TED) csv subset](https://data.europa.eu/data/datasets/ted-csv), "TED - Contract notices 2022", European Commission, DG GROW, licence [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); one row per notice, columns renamed.
+
+Two questions on the `buyer` column, 1,000 rows each, about 45 seconds and 0.012-0.014 USD per question with Jev:
+
+| `buyer` | `main_activity` | The buyer is a hospital or other health care provider | What kind of organisation is this buyer? |
+|---|---|---|---|
+| Beaumont Hospital | Health | 0.66 | hospital or health service (1.00) |
+| Health Service Executive (HSE) | Health | 0.74 | national ministry or agency (0.48) |
+| Health Information and Quality Authority (HIQA) | Health | 0.47 | national ministry or agency (1.00) |
+| Trinity College Dublin, the University of Dublin | Education | 0.08 | school or university (1.00) |
+| Wicklow County Council | General public services | 0.14 | municipality or local government (1.00) |
+| Mayo, Sligo and Leitrim ETB | Education | 0.53 | school or university (0.39) |
+| Department of Contracts | Health | 0.26 | other (0.75) |
+
+The labels for the second question were `municipality or local government, hospital or health service, school or university, national ministry or agency, utility or transport company, other`.
+
+Compared with `main_activity = Health`, at a 0.5 threshold:
+
+- when the model says yes, it is right 56 times out of 59 (95%);
+- it finds 56 of the 120 health buyers. 54 of the 64 it misses are the same buyer, Malta's "Department of Contracts", a central purchasing body: nothing in its name says health, so no question on this column can find it. Without it, the model finds 56 of 66 (85%);
+- most of the other misses are regulators and research bodies (HIQA, the Health Research Board, the Nursing and Midwifery Board): the question asked about care providers, and the model reads it literally;
+- the three wrong yeses are all one education and training board, at 0.53 to 0.61, just above the threshold.
+
+What this shows: the model judges only what is in the cell, and its yes is reliable; when the cell does not hold the information, ask about another column or accept that no question will find it.
 
 <a id="choosing-a-model"></a>
 ## Choosing a model
@@ -184,7 +215,7 @@ Every run of `jev-column` or `jev-selected` adds columns to the right of the tex
 | `message_choice` | one label | text | The label the model picked, always one of those you listed. |
 | `message_choice_conf` | one label | number, 0 to 1 | How sure the model is. It is computed from how the probabilities are spread: one label with almost all of it gives a high value, probabilities shared among several labels give a low one. |
 | `message_choice_p` | one label | dictionary | The probability of every label, in the order you listed them; they add up to 1. `(` expands it into one number column per label. |
-| `message_score` | ordered scale | number, 0 to n-1 | The position on your scale: 0 is the first level you wrote, n-1 the last. It is the average of the level numbers weighted by their probabilities, so it can fall between two levels (1.5 is between `medium` and `high`). |
+| `message_score` | ordered scale | number, 0 to n-1 | The position on your scale: 0 is the first level you wrote, n-1 the last. It is the average of the level numbers weighted by their probabilities, so it can fall between two levels (1.5 is between `medium` and `high`). Use it to pick a level or as a threshold, not as a measured quantity: OpenRouter's [notes on decision model limits](https://github.com/OpenRouterTeam/skills/blob/main/skills/openrouter-decisions/references/decision-model-limits.md) warn that it is not calibrated between levels. |
 | `message_score_conf` | ordered scale | number, 0 to 1 | How sure the model is, as for `choice`: high when one level takes almost all the probability, low when it is spread over several levels. |
 | `message_score_p` | ordered scale | dictionary | The probability of every level, from lowest to highest, keyed by your level names; they add up to 1. `(` expands it into columns. |
 | `message_<type>_raw` | all | text, hidden | The whole answer of the model as JSON, or `error: ...` for a failed row. `gv` shows it. |
