@@ -1,0 +1,23 @@
+[project]
+name = "vd-jev"
+version = "0.1.0"
+description = "VisiData plugin: closed questions over a text column with Jev (TypeSafe) via OpenRouter"
+readme = "README.md"
+license = "GPL-3.0-only"
+license-files = ["LICENSE"]
+authors = [{ name = "Andrea Borruso", email = "aborruso@gmail.com" }]
+requires-python = ">=3.10"
+dependencies = ["requests"]
+
+[project.urls]
+Homepage = "https://github.com/aborruso/vd-jev"
+
+[project.entry-points."visidata.plugins"]
+jev = "vd_jev"
+
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["vd_jev"]
