@@ -18,6 +18,7 @@ It brings to VisiData the idea behind MotherDuck's [`prompt_jev()`](https://moth
 - [Cost](#cost)
 - [Privacy](#privacy)
 - [Options](#options)
+- [Columns reference](#columns)
 - [Tests](#tests)
 - [License](#license)
 
@@ -158,6 +159,26 @@ The text of each cell is sent to OpenRouter and to the provider of the chosen mo
 | `jev_concurrency` | `8` | parallel requests |
 | `jev_confirm_rows` | `100` | ask for confirmation above this many rows |
 | `jev_timeout` | `30` | seconds per request |
+
+<a id="columns"></a>
+## Columns reference
+
+Every run of `jev-column` or `jev-selected` adds columns to the right of the text column. `message` below stands for the name of that column. Rows with an empty text, and rows where the request failed, stay empty in every new column except `_raw`.
+
+| Column | Question type | Type | Meaning |
+|---|---|---|---|
+| `message_noul` | yes/no | number, 0 to 1 | The probability that the answer to the question is yes. |
+| `message_choice` | one label | text | The label the model picked, always one of those you listed. |
+| `message_choice_conf` | one label | number, 0 to 1 | How sure the model is. It is computed from how the probabilities are spread: one label with almost all of it gives a high value, probabilities shared among several labels give a low one. |
+| `message_choice_p` | one label | dictionary | The probability of every label, in the order you listed them; they add up to 1. `(` expands it into one number column per label. |
+| `message_score` | ordered scale | number, 0 to n-1 | The position on your scale: 0 is the first level you wrote, n-1 the last. It is the average of the level numbers weighted by their probabilities, so it can fall between two levels (1.5 is between `medium` and `high`). |
+| `message_score_conf` | ordered scale | number, 0 to 1 | How sure the model is, as for `choice`: high when one level takes almost all the probability, low when it is spread over several levels. |
+| `message_score_p` | ordered scale | dictionary | The probability of every level, from lowest to highest, keyed by your level names; they add up to 1. `(` expands it into columns. |
+| `message_<type>_raw` | all | text, hidden | The whole answer of the model as JSON, or `error: ...` for a failed row. `gv` shows it. |
+
+A yes/no question has no confidence column: the probability is already the whole answer, and a value near 0.5 means the model cannot tell.
+
+Confidence describes the model's answer, not whether the answer is right ([TypeSafe docs](https://docs.typesafe.ai/primitives/score)). Use it to decide which rows to read by hand, not as a measure of accuracy. Definitions of `score`, `confidence` and `probabilities` follow TypeSafe's documentation of [choice](https://docs.typesafe.ai/primitives/choice) and [score](https://docs.typesafe.ai/primitives/score).
 
 <a id="tests"></a>
 ## Tests
