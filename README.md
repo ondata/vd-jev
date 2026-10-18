@@ -56,7 +56,7 @@ and the same table comes back with typed columns next to the text:
 | 4 | | | | | | |
 | 7 | Road works on King Street start at 5am and wake the whole block. | 0.18 | roads | 0.79 | 0.74 | 0.00 |
 
-These are real answers from Jev 1.14 on the demo file (2026-10-18). The empty message is skipped. Row 7 shows the confidence at work: road works that wake people up sit between `roads` and `noise`, and the model says so (0.79); on urgency it has no idea (0.00).
+These are real answers from Jev 1.14 on the demo file (2026-10-18). The empty message is skipped. Row 7 shows the confidence at work: road works that wake people up sit between `roads` and `noise`, and the confidence drops to 0.79; on urgency it is 0.00. Those are the rows to read by hand.
 
 In VisiData this changes what you can do with a column of free text. Once the answers are columns, everything you already know applies: `Shift+F` counts the requests per department, `[` and `]` sort by urgency, `z|` selects the hazards, or the rows where the model is unsure (low confidence), so you read by hand only those. Tickets to route, survey answers to code, complaints to triage, descriptions to tag: a few cents for thousands of rows (see [Cost](#cost)), instead of reading them all.
 
