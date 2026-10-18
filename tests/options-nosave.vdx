@@ -1,6 +1,6 @@
 # the jev options are registered with their defaults and listed on the Shift+O sheet
 assert-expr vd.options.jev_model == 'typesafe/jev-1.14'
-assert-expr vd.options.getdefault('jev_api_url') == 'https://openrouter.ai/api/v1/systemone'
+assert-expr vd.options.getdefault('jev_api_url') == 'https://openrouter.ai/api/alpha/decisions'
 assert-expr vd.options.jev_concurrency == 8
 assert-expr vd.options.jev_confirm_rows == 100
 assert-expr vd.options.jev_timeout == 30

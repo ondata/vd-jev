@@ -83,7 +83,7 @@ def test_error_row(jev):
     jev.reply({'error': {'message': 'boom'}}, status=500)
     cols = ask(textsheet('a', 'b'))
     assert cols['text_noul'] == [None, 0.1]
-    assert cols['text_noul_raw'][0] == 'error: Jev returned HTTP 500: boom'
+    assert cols['text_noul_raw'][0] == 'error: OpenRouter returned HTTP 500: boom'
     assert jev.statuses[-1] == 'jev noul: 1 rows answered, 0 skipped (empty), 1 errors, 0.000010 USD'
 
 
@@ -120,7 +120,7 @@ def test_confirm_in_main_thread(jev, monkeypatch):
     monkeypatch.setattr(vd, 'confirm', lambda prompt, *a, **kw: confirmed.append((prompt, threading.current_thread())), raising=False)
     vd.options.jev_confirm_rows = 2
     ask(textsheet('a', 'b', '', 'c'))
-    assert confirmed == [('send 3 rows to Jev? ', threading.current_thread())]
+    assert confirmed == [('send 3 rows to `typesafe/jev-1.14`? ', threading.current_thread())]
 
 
 def test_no_confirm_at_threshold(jev, monkeypatch):

@@ -42,7 +42,7 @@ class FakeJev:
                 pass
 
         self.server = http.server.ThreadingHTTPServer(('127.0.0.1', 0), Handler)
-        self.url = f'http://127.0.0.1:{self.server.server_address[1]}/api/v1/systemone'
+        self.url = f'http://127.0.0.1:{self.server.server_address[1]}/api/alpha/decisions'
         threading.Thread(target=self.server.serve_forever, daemon=True).start()
 
     def reply(self, body, status=200, headers=None, delay=0):

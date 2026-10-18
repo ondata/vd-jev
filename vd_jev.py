@@ -1,8 +1,9 @@
 '''
 # vd-jev
 
-Ask closed questions about every cell of a text column with Jev, TypeSafe's
-decision model, called through OpenRouter. Answers come back as typed columns:
+Ask closed questions about every cell of a text column with a decision model
+on OpenRouter: Jev, TypeSafe's model, by default, or any other model that
+OpenRouter's Decisions API serves (set `vd.options.jev_model`). Answers come back as typed columns:
 a probability (noul), a label from a fixed list (choice), or a position on an
 ordered scale (score), each with a calibrated confidence.
 
@@ -24,8 +25,8 @@ ordered scale (score), each with a calibrated confidence.
 
 Set in ~/.visidatarc, or with Shift+O:
 
-    vd.options.jev_model = 'typesafe/jev-1.14'
-    vd.options.jev_api_url = 'https://openrouter.ai/api/v1/systemone'
+    vd.options.jev_model = 'typesafe/jev-1.14'   # any id from https://openrouter.ai/api/v1/models?output_modalities=decisions
+    vd.options.jev_api_url = 'https://openrouter.ai/api/alpha/decisions'
     vd.options.jev_concurrency = 8      # parallel requests
     vd.options.jev_confirm_rows = 100   # ask before sending more rows than this
     vd.options.jev_timeout = 30         # seconds per request
@@ -47,11 +48,11 @@ import urllib.request
 
 from visidata import vd, VisiData, Sheet, SettableColumn, asyncthread, Progress
 
-vd.option('jev_model', 'typesafe/jev-1.14', 'Jev model id on OpenRouter')
-vd.option('jev_api_url', 'https://openrouter.ai/api/v1/systemone', 'Jev System One endpoint')
-vd.option('jev_concurrency', 8, 'number of parallel Jev requests')
-vd.option('jev_confirm_rows', 100, 'ask for confirmation before sending more rows than this to Jev')
-vd.option('jev_timeout', 30, 'seconds to wait for each Jev request')
+vd.option('jev_model', 'typesafe/jev-1.14', 'decision model id on OpenRouter (Jev by default)')
+vd.option('jev_api_url', 'https://openrouter.ai/api/alpha/decisions', 'OpenRouter Decisions API endpoint')
+vd.option('jev_concurrency', 8, 'number of parallel requests to the decision model')
+vd.option('jev_confirm_rows', 100, 'ask for confirmation before sending more rows than this')
+vd.option('jev_timeout', 30, 'seconds to wait for each request')
 
 JEV_KINDS = ('noul', 'choice', 'score')
 JEV_MAX_SCORE_LEVELS = 10
@@ -59,7 +60,7 @@ JEV_QUESTION_KEY = 'answer'
 
 
 class JevError(Exception):
-    'Any failure asking Jev: invalid question, HTTP error, timeout, malformed answer.'
+    'Any failure asking the decision model: invalid question, HTTP error, timeout, malformed answer.'
 
 
 def jev_parse_answers(text):
@@ -74,7 +75,7 @@ def jev_parse_answers(text):
 
 
 def jev_build_question(kind, instructions, labels=None):
-    'Return the question object for one Jev question of type *kind*.'
+    'Return the question object for one question of type *kind*.'
     if kind not in JEV_KINDS:
         raise JevError(f'unknown question type `{kind}`; use one of {", ".join(JEV_KINDS)}')
     instructions = (instructions or '').strip()
@@ -113,7 +114,7 @@ def _http_error_message(e):
         message = json.loads(e.read().decode('utf-8'))['error']['message']
     except Exception:
         message = e.reason
-    return f'Jev returned HTTP {e.code}: {message}'
+    return f'OpenRouter returned HTTP {e.code}: {message}'
 
 
 def _retry_delay(e, attempt):
@@ -125,7 +126,7 @@ def _retry_delay(e, attempt):
 
 
 def jev_send(body, api_key, url, timeout, retries=3):
-    'POST *body* to Jev and return the decoded JSON response; retry up to *retries* times on 429.'
+    'POST *body* to OpenRouter and return the decoded JSON response; retry up to *retries* times on 429.'
     data = json.dumps(body).encode('utf-8')
     headers = {
         'Authorization': f'Bearer {api_key}',
@@ -142,11 +143,11 @@ def jev_send(body, api_key, url, timeout, retries=3):
                 continue
             raise JevError(_http_error_message(e)) from e
         except urllib.error.URLError as e:
-            raise JevError(f'cannot reach Jev: {e.reason}') from e
+            raise JevError(f'cannot reach OpenRouter: {e.reason}') from e
         except TimeoutError as e:
-            raise JevError(f'no answer from Jev within {timeout}s') from e
+            raise JevError(f'no answer from OpenRouter within {timeout}s') from e
         except json.JSONDecodeError as e:
-            raise JevError('Jev answer is not JSON') from e
+            raise JevError('OpenRouter answer is not JSON') from e
 
 
 def jev_parse_answer(question, response):
@@ -165,9 +166,9 @@ def jev_parse_answer(question, response):
             value, confidence = float(answer['score']), float(answer['confidence'])
         cost = float((response.get('usage') or {}).get('cost') or 0)
     except (KeyError, TypeError, ValueError, AttributeError) as e:
-        raise JevError(f'malformed {kind} answer from Jev') from e
+        raise JevError(f'malformed {kind} answer from the model') from e
     if kind == 'choice' and value not in question['criteria']:
-        raise JevError(f'Jev chose `{value}`, which is not one of the labels')
+        raise JevError(f'the model chose `{value}`, which is not one of the labels')
     return dict(value=value, confidence=confidence, raw=json.dumps(answer), cost=cost)
 
 
@@ -188,7 +189,7 @@ def inputJev(vd):
 
 @Sheet.api
 def jevAsk(sheet, col, rows, question='', answers=''):
-    'Ask Jev *question* about the text of *col* in each of *rows*; add the answers as new columns.'
+    'Ask the decision model *question* about the text of *col* in each of *rows*; add the answers as new columns.'
     try:
         kind, labels = jev_parse_answers(answers)
         q = jev_build_question(kind, question, labels)
@@ -206,7 +207,7 @@ def jevAsk(sheet, col, rows, question='', answers=''):
             todo.append((row, text))
 
     if len(todo) > vd.options.jev_confirm_rows:
-        vd.confirm(f'send {len(todo)} rows to Jev? ')
+        vd.confirm(f'send {len(todo)} rows to `{vd.options.jev_model}`? ')
 
     valuecol = SettableColumn(f'{col.name}_{kind}', type=str if kind == 'choice' else float)
     newcols = [valuecol]
@@ -232,7 +233,7 @@ def jevRun(sheet, todo, question, api_key, nskipped, valuecol, confcol, rawcol):
     pool = concurrent.futures.ThreadPoolExecutor(max_workers=max(1, vd.options.jev_concurrency))
     try:
         pending = {pool.submit(jev_ask, text, *args): row for row, text in todo}
-        with Progress(gerund='asking Jev', total=len(pending)) as prog:
+        with Progress(gerund=f'asking {vd.options.jev_model}', total=len(pending)) as prog:
             while pending:
                 # short waits, so that Ctrl+C reaches this thread quickly
                 done, _ = concurrent.futures.wait(pending, timeout=0.25, return_when=concurrent.futures.FIRST_COMPLETED)
@@ -259,9 +260,9 @@ def jevRun(sheet, todo, question, api_key, nskipped, valuecol, confcol, rawcol):
 
 # no default keybindings, as in experimental/llm.py
 Sheet.addCommand('', 'jev-column', 'jevAsk(cursorCol, rows, **vd.inputJev())',
-    'ask Jev a closed question about every row of current column; add the answers as new columns')
+    'ask a decision model a closed question about every row of current column; add the answers as new columns')
 Sheet.addCommand('', 'jev-selected', 'jevAsk(cursorCol, someSelectedRows, **vd.inputJev())',
-    'ask Jev a closed question about selected rows of current column; add the answers as new columns')
+    'ask a decision model a closed question about selected rows of current column; add the answers as new columns')
 
 vd.addMenuItems('''
     Column > Jev > all rows > jev-column

@@ -97,7 +97,7 @@ def test_parse_missing_cost():
 
 def test_parse_choice_outside_labels():
     q = jev_build_question('choice', 'q', ['waste', 'parks'])
-    with pytest.raises(JevError, match='Jev chose `roads`'):
+    with pytest.raises(JevError, match='the model chose `roads`'):
         jev_parse_answer(q, response(CHOICE))
 
 
@@ -127,7 +127,7 @@ def test_send(fakejev):
     body = jev_build_request('text', jev_build_question('noul', 'q'), 'm')
     assert jev_send(body, 'sk-test', fakejev.url, timeout=5) == response(NOUL)
     req, = fakejev.requests
-    assert req['path'] == '/api/v1/systemone'
+    assert req['path'] == '/api/alpha/decisions'
     assert req['headers']['Authorization'] == 'Bearer sk-test'
     assert req['headers']['Content-Type'] == 'application/json'
     assert req['body'] == body
@@ -166,30 +166,30 @@ def test_retries_exhausted(fakejev, nosleep):
 
 def test_http_error_message(fakejev):
     fakejev.reply({'error': {'message': 'No cookie auth credentials found', 'code': 401}}, status=401)
-    with pytest.raises(JevError, match='Jev returned HTTP 401: No cookie auth credentials found'):
+    with pytest.raises(JevError, match='OpenRouter returned HTTP 401: No cookie auth credentials found'):
         jev_send({}, 'bad', fakejev.url, timeout=5)
 
 
 def test_http_error_without_json_body(fakejev):
     fakejev.reply(b'<html>bad gateway</html>', status=502)
-    with pytest.raises(JevError, match='Jev returned HTTP 502: Bad Gateway'):
+    with pytest.raises(JevError, match='OpenRouter returned HTTP 502: Bad Gateway'):
         jev_send({}, 'k', fakejev.url, timeout=5)
 
 
 def test_non_json_answer(fakejev):
     fakejev.reply(b'not json')
-    with pytest.raises(JevError, match='Jev answer is not JSON'):
+    with pytest.raises(JevError, match='OpenRouter answer is not JSON'):
         jev_send({}, 'k', fakejev.url, timeout=5)
 
 
 def test_timeout(fakejev):
     fakejev.reply(response(NOUL), delay=1)
-    with pytest.raises(JevError, match='Jev'):
+    with pytest.raises(JevError, match='OpenRouter'):
         jev_send({}, 'k', fakejev.url, timeout=0.2)
 
 
 def test_connection_refused(fakejev):
     url = fakejev.url
     fakejev.close()
-    with pytest.raises(JevError, match='cannot reach Jev'):
+    with pytest.raises(JevError, match='cannot reach OpenRouter'):
         jev_send({}, 'k', url, timeout=2)

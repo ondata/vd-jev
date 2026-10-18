@@ -28,6 +28,7 @@ vd-jev is a VisiData plugin that asks closed questions about every cell of a tex
 - **Jev** is a "System One" model by TypeSafe. It takes a `state` (text) and a set of typed questions and returns typed answers with probabilities. It never returns free text. Question types: `noul` (is this statement true? returns a probability), `choice` (which label from a list? returns the label, per-label probabilities and a confidence), `score` (which level on an ordered rubric? returns a weighted position, per-level probabilities and a confidence). Newer types (`box` for images, `multiple_choice`) exist but are out of scope for v1.
 - **MotherDuck** exposes Jev as `prompt_jev(input, instructions, choice := [...])` since 2026-09-21. Images, `box` and `multiple_choice` were added on 2026-10-16.
 - **OpenRouter** serves Jev to anyone with an OpenRouter API key, with no TypeSafe account. Billing is per input token; output tokens are free.
+- **Why OpenRouter**: one entry point, one key and one request format for every decision model it serves, not only Jev. Its Decisions API (`POST /api/alpha/decisions`) takes the same body as Jev's own System One API, and on 2026-10-18 its live catalog (`/api/v1/models?output_modalities=decisions`) listed 27 decision models from 15 makers (TypeSafe, Perplexity, Microsoft, OpenAI, Cloudflare, Liquid, Upstage and others). The plugin uses Jev by default; switching to another model is the `jev_model` option, with no code change. Checked with real calls on the same sentence: Jev 1.14 and Perplexity Decider Flash 1.2 both answered all three question types.
 - **VisiData 3.4** ships an experimental plugin, `visidata/experimental/llm.py`, that runs a free-form Claude prompt over a column. vd-jev follows its structure and style, so it could later be proposed upstream.
 
 <a id="goals"></a>
@@ -46,7 +47,7 @@ Non-goals for v1:
 
 - Images, `box`, `multiple_choice`, label descriptions, several questions in one call.
 - Several rows per request (see [Open questions](#open-questions)).
-- Any other backend than OpenRouter's System One endpoint.
+- Any other backend than OpenRouter's Decisions API.
 - Caching of answers across sessions.
 
 <a id="users"></a>
@@ -112,8 +113,8 @@ Each command also adds a hidden `<col>_<type>_raw` column with the JSON answer f
 
 | Option | Default | Meaning |
 |---|---|---|
-| `jev_model` | `typesafe/jev-1.14` | model id on OpenRouter |
-| `jev_api_url` | `https://openrouter.ai/api/v1/systemone` | endpoint |
+| `jev_model` | `typesafe/jev-1.14` | decision model id on OpenRouter; any `id` from the live catalog `https://openrouter.ai/api/v1/models?output_modalities=decisions` |
+| `jev_api_url` | `https://openrouter.ai/api/alpha/decisions` | OpenRouter Decisions API endpoint |
 | `jev_concurrency` | `8` | parallel requests |
 | `jev_confirm_rows` | `100` | ask for confirmation above this many rows |
 | `jev_timeout` | `30` | seconds per request |
@@ -122,6 +123,8 @@ The API key is read from `OPENROUTER_API_KEY`; if missing, the command fails wit
 
 <a id="api"></a>
 ## Jev API
+
+The plugin sends requests to OpenRouter's Decisions API, `POST https://openrouter.ai/api/alpha/decisions`, which serves every decision model in OpenRouter's catalog with one request format. The path is marked `alpha`, so OpenRouter may change it; `jev_api_url` makes that a configuration change. Jev's own System One endpoint on OpenRouter, `POST https://openrouter.ai/api/v1/systemone`, takes the same body but serves only models on TypeSafe's System One contract; it was used for the first check below.
 
 Verified on 2026-10-18 with a real call (cost 0.000016 USD):
 
@@ -240,7 +243,7 @@ Measuring accuracy on real data (ANAC, data.europa.eu) is left for after v1 (see
 <a id="privacy"></a>
 ## Privacy and cost
 
-- Cell text is sent to OpenRouter and then to TypeSafe, whose servers are in the United States. The README must say so plainly: suitable for public data, not for personal or confidential data without an agreement in place.
+- Cell text is sent to OpenRouter and then to the provider of the chosen model (TypeSafe for Jev), whose servers are in the United States for Jev. The README must say so plainly: suitable for public data, not for personal or confidential data without an agreement in place.
 - Cost is per input token. The verified call (one sentence, two questions) cost 0.000016 USD; about 400 input tokens per row with one question is a reasonable first estimate. The final summary reports the real cost from `usage.cost`.
 
 <a id="milestones"></a>

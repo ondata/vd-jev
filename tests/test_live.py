@@ -1,4 +1,4 @@
-'Real calls to Jev on OpenRouter: run by hand with `uv run pytest -m live`, never in CI (about 0.00002 USD each).'
+'Real calls to Jev on the OpenRouter Decisions API: run by hand with `uv run pytest -m live`, never in CI (about 0.00002 USD each).'
 
 import os
 
@@ -12,7 +12,7 @@ pytestmark = [
 ]
 
 MODEL = 'typesafe/jev-1.14'
-URL = 'https://openrouter.ai/api/v1/systemone'
+URL = 'https://openrouter.ai/api/alpha/decisions'
 TEXT = 'A large tree has fallen across Elm Street after the storm and is blocking both lanes.'
 
 

@@ -4,7 +4,7 @@ A VisiData plugin that brings the ideas of MotherDuck's `prompt_jev()` into Visi
 
 ## Decisions (2026-10-18)
 
-- Engine: Jev via OpenRouter, `POST https://openrouter.ai/api/v1/systemone`, key in `OPENROUTER_API_KEY`. Checked with a real call: an Italian tender description returned `choice` = `lavori` (p=1), `noul` urgency = 0.09, cost 0.000016 USD.
+- Endpoint (changed 2026-10-18 with the user): OpenRouter Decisions API, `POST https://openrouter.ai/api/alpha/decisions`, model `typesafe/jev-1.14` by default, any decision model from the live catalog via `jev_model`; reason: one entry point for every decision model on OpenRouter. Same body as System One; real calls with Jev 1.14 and Perplexity Decider Flash 1.2 answered all three types. Path is `alpha`. First engine check was on System One, `POST https://openrouter.ai/api/v1/systemone`, key in `OPENROUTER_API_KEY`. Checked with a real call: an Italian tender description returned `choice` = `lavori` (p=1), `noul` urgency = 0.09, cost 0.000016 USD.
 - Repo: `~/git/vd-jev`, on GitHub as `aborruso/vd-jev`. Changed 2026-10-18 at the user's request: created private at the end of phase 1, made public in phase 5 once the plugin works.
 - Language: everything in the repo is in English, this plan included: code, comments, README, LOG, commit messages.
 - v1 scope: `noul`, `choice` and `score` questions on text, over the whole column or the selected rows only, through two commands; the type comes from the `answers` field. Out of scope: `box`, images, `multiple_choice`.
@@ -41,8 +41,8 @@ A VisiData plugin that brings the ideas of MotherDuck's `prompt_jev()` into Visi
 
 Decided with the user on 2026-10-18: the question type comes from what the user types, as in MotherDuck's `prompt_jev()`, so two commands instead of six; the demo is a handful of rows that shows what the plugin is for, not an accuracy benchmark; no large volume file (the confirmation threshold is tested on a synthetic sheet in pytest). The 40-row draft and `tmp/volume.csv` are dropped.
 
-- [ ] Write `demo/city_requests.csv`: 3 columns (`id`, `district`, `message`), 4 rows, one with an empty message → check: user approves it
-  - Written 2026-10-18 (fallen tree, bench request, loud bar, empty); waiting for the user's approval.
+- [x] Write `demo/city_requests.csv`: 3 columns (`id`, `district`, `message`), 4 rows, one with an empty message → check: user approves it
+  - Written 2026-10-18 (fallen tree, bench request, loud bar, empty); approved by the user on 2026-10-18.
 - [x] `jev_parse_answers()`: empty → `noul`; `a, b, c` → `choice`; `low < medium < high` → `score` → check: unit tests for each form and for invalid input
   - Done 2026-10-18, `test_parse_answers*` in `tests/test_client.py`.
 - [x] `jev-column` / `jev-selected`: one `vd.inputMultiple` prompt with `question` and `answers` (STYLE.md: one `input()` per command; pattern from `features/regex.py`), through an `inputJev()` helper kept in the execstr; question built, key read and confirmation asked in the main thread, requests in an `@asyncthread` with a thread pool of `jev_concurrency`; adds `<col>_noul` (float), or `<col>_choice` (str) + `<col>_choice_conf` (float), or `<col>_score` (float) + `<col>_score_conf` (float), plus a hidden `<col>_<type>_raw` → check: `.vdx` replays on `demo/city_requests.csv` against the loopback server, output compared with golden files in `tests/golden/` (as VisiData does); `choice` is one of the labels, `score` between 0 and n-1, `noul` between 0 and 1
@@ -63,13 +63,13 @@ Decided with the user on 2026-10-18: the question type comes from what the user 
   - Done 2026-10-18, see LOG.
 - [ ] VHS recording (`demo/demo.tape` -> `demo/demo.gif`, VHS v0.11.0 installed in `~/go/bin`, ttyd and ffmpeg present): `vd demo/city_requests.csv`, `jev-column` with one question, the new columns, then `Shift+F` on the choice column or a sort by confidence; real calls on 3 rows (~0.00004 USD per take); every key in the tape checked in the VisiData source or by replay first → check: `vhs demo/demo.tape` produces the GIF; user reviews it
 - [ ] Make `aborruso/vd-jev` public, after explicit user confirmation → check: repo visible logged out, README renders
-- [ ] README with `uv tool` install, examples, indicative costs, and a note that cell text is sent to OpenRouter/TypeSafe (USA)
+- [ ] README with `uv tool` install, examples, indicative costs, how to choose another model with `jev_model`, and a note that cell text is sent to OpenRouter and the model provider (TypeSafe, USA, for Jev)
 
 ## After v1 (not in this plan)
 
 - Several rows per request (`state.rows[i]` pattern, one question per row, at most ~20 rows): measure against v1 on accuracy and speed before adopting it
 - `multiple_choice`, label descriptions, several questions in one call
-- Other decision models on OpenRouter (same API, only `model` changes)
+- Model picker: a sheet of the live decision-model catalog, where Enter sets `jev_model`
 - Possible PR to VisiData under `experimental/`
 - Real-data evaluation: Italian ANAC records or an English dataset from data.europa.eu
 
