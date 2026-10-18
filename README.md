@@ -15,6 +15,7 @@ It brings to VisiData the idea behind MotherDuck's [`prompt_jev()`](https://moth
 - [Why a decision model](#why)
 - [Requirements](#requirements)
 - [Installation](#installation)
+- [Quick start](#quick-start)
 - [What it does](#what-it-does)
 - [A real example: EU public procurement](#ted)
 - [A larger test: EU research projects](#cordis)
@@ -97,6 +98,39 @@ uv tool install visidata --with-editable ~/git/vd-jev
 ```
 
 If VisiData is already installed as a `uv tool` with extra packages, add `--reinstall` and repeat every `--with` you already use: reinstalling drops any extra that is not passed again.
+
+<a id="quick-start"></a>
+## Quick start
+
+A tour of the plugin on the small demo file (ten messages to a city's service desk, one of them empty). It makes about thirty requests, less than 0.001 USD with Jev.
+
+1. Open the file. VisiData reads it straight from GitHub:
+
+   ```bash
+   vd https://raw.githubusercontent.com/ondata/vd-jev/main/demo/city_requests.csv
+   ```
+
+2. Move the cursor to the `message` column, with the right arrow or `l`, or press `c`, type `^message$` and `Enter`.
+
+3. Ask a yes/no question. Press `Space`, type `jev-column` and press `Enter` (the same command is in the menu: `Alt+c`, or a click on Column, then Jev, then all rows). A form opens with two fields, `question` at the bottom and `answers` above it. Type
+
+   ```
+   Does the message report a safety hazard?
+   ```
+
+   in `question`, leave `answers` empty, and press `Enter`. A `message_noul` column appears to the right of `message`, with the probability of yes for each row; the empty message stays empty. The status at the bottom reports rows answered, skipped, errors and cost. The cursor stays on `message`, ready for the next question.
+
+4. Pick one label. `Space`, `jev-column`, `Enter`; in `question` type `Which department should handle this?`, press `Tab` to move to `answers`, type `roads, parks, noise`, press `Enter`. You get `message_choice`, `message_choice_conf` and `message_choice_p`.
+
+5. Count the answers. Press `l` to move to `message_choice`, then `Shift+F`: a frequency table of the departments. `q` goes back.
+
+6. Ask for a place on a scale. Press `h` to go back to `message`, then `Space`, `jev-column`, `Enter`; question `How urgent is this request?`, `Tab`, answers `low < medium < high`, `Enter`. You get `message_score` (0 is low, 2 is high), `message_score_conf` and `message_score_p`.
+
+7. Find the rows to read by hand. Press `l` twice to reach `message_score_conf`, `[` to sort by it, then `z|`, type `0 < message_score_conf < 0.5` and `Enter`: the rows where the model is unsure are selected.
+
+8. Save with `Ctrl+S` and a file name, for example `requests.csv`. Hidden columns are not saved; press `gv` before saving to keep the `_raw` columns too.
+
+`Ctrl+Q` quits VisiData.
 
 <a id="what-it-does"></a>
 ## What it does

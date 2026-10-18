@@ -2,6 +2,7 @@
 
 ## 2026-10-18
 
+- README Quick start: step-by-step tour on the small demo file, opened from its GitHub raw URL; keys checked in the VisiData 3.4 source (`Space`, `c`, `Tab`, `Shift+F`, `q`, `h`/`l`, `[`, `z|`, `Ctrl+S`, `gv`, `Alt+c`, `Ctrl+Q`) and the sequence covered by `tests/guide-nosave.vdx`.
 - `ondata/vd-jev` is public. Install from GitHub checked in a clean venv.
 - README "Checking official data": on CORDIS, disagreement with confidence >= 0.95 selects 85 of 1000 projects; four checked by reading the objective show euroSciVoc labels that match a single out-of-context word (kills -> mortality, planet -> planetary sciences, catalyst/ecosystem -> catalysis/ecology, environments -> ecosystems). That CORDIS labels are keyword-based is an inference, not documented. Per the user, the README now states that the plugin read only the CSV objective, CORDIS may use the whole online project record, and the examples are a demonstration, not proof of errors.
 - CORDIS test (Horizon 2020 projects, COM_REUSE licence accepted by the user): 1000 projects, field of science from the objective vs euroSciVoc: 75.2% without descriptions, 78.6% with; answers with confidence >= 0.8 (825) match 84.5%, below 0.8 about 51%. Disagreements mostly natural sciences vs engineering; some euroSciVoc labels are wrong (a surfboard project under planetary sciences). `demo/cordis_sample.csv`, `demo/cordis_questions.py`, README section.
