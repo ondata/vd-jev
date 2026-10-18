@@ -26,15 +26,37 @@ It brings to VisiData the idea behind MotherDuck's [`prompt_jev()`](https://moth
 
 If you love VisiData but have not used AI models much with it, this is the simplest place to start.
 
-The AI models most people know are chat models: you write a prompt, they write text back. Text is hard to put in a table: it has to be read, parsed, checked. Decision models such as Jev work the other way round. You ask a closed question and they never answer with text, only with a quick, typed classification:
+The AI models most people know are chat models: you write a prompt, they write text back. Text is hard to put in a table: it has to be read, parsed, checked. Decision models such as Jev work the other way round: you ask a closed question and they never answer with text, only with a quick, typed classification.
 
-| You ask, about each message | You get back | Kind |
+Start from a table with a column of free text, like `demo/city_requests.csv`:
+
+| id | district | message |
 |---|---|---|
-| Does the message report a safety hazard? | `0.97`: the probability that the answer is yes | yes/no |
-| Which department should handle this? `roads, parks, noise` | `roads`: one of your labels, with a confidence | one label |
-| How urgent is this request? `low < medium < high` | `1.96`: a place on your scale, from 0 to 2, with a confidence | ordered scale |
+| 1 | North | A tree has fallen across Elm Street after the storm and blocks both lanes. |
+| 2 | Central | Please add a bench near the duck pond in Riverside Park. |
+| 3 | East | The bar on Market Square plays loud music until 3am every night. |
+| 4 | West | |
+| 7 | Central | Road works on King Street start at 5am and wake the whole block. |
 
-The answers above are the real ones for "A tree has fallen across Elm Street after the storm and blocks both lanes", from the demo file.
+Ask three questions about the `message` column, one `jev-column` each:
+
+| Question | Answers | Kind of answer |
+|---|---|---|
+| Does the message report a safety hazard? | *(empty)* | yes/no: the probability of yes, 0 to 1 |
+| Which department should handle this? | `roads, parks, noise` | one of your labels, with a confidence |
+| How urgent is this request? | `low < medium < high` | a place on your scale, 0 (low) to 2 (high), with a confidence |
+
+and the same table comes back with typed columns next to the text:
+
+| id | message | message_noul | message_choice | message_choice_conf | message_score | message_score_conf |
+|---|---|---|---|---|---|---|
+| 1 | A tree has fallen across Elm Street after the storm and blocks both lanes. | 0.97 | roads | 0.98 | 1.96 | 0.93 |
+| 2 | Please add a bench near the duck pond in Riverside Park. | 0.03 | parks | 1.00 | 0.10 | 0.86 |
+| 3 | The bar on Market Square plays loud music until 3am every night. | 0.16 | noise | 1.00 | 0.98 | 0.13 |
+| 4 | | | | | | |
+| 7 | Road works on King Street start at 5am and wake the whole block. | 0.18 | roads | 0.79 | 0.74 | 0.00 |
+
+These are real answers from Jev 1.14 on the demo file (2026-10-18). The empty message is skipped. Row 7 shows the confidence at work: road works that wake people up sit between `roads` and `noise`, and the model says so (0.79); on urgency it has no idea (0.00).
 
 In VisiData this changes what you can do with a column of free text. Once the answers are columns, everything you already know applies: `Shift+F` counts the requests per department, `[` and `]` sort by urgency, `z|` selects the hazards, or the rows where the model is unsure (low confidence), so you read by hand only those. Tickets to route, survey answers to code, complaints to triage, descriptions to tag: a few cents for thousands of rows (see [Cost](#cost)), instead of reading them all.
 
