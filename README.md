@@ -9,7 +9,7 @@
 
 vd-jev is a VisiData plugin that asks closed questions about every cell of a text column and writes the answers back as typed columns: a probability (yes/no), a label from a fixed list, or a position on an ordered scale, each with a calibrated confidence. Answers come from Jev, TypeSafe's decision model, by default, or from any other decision model on [OpenRouter](https://openrouter.ai/docs/guides/community/jev).
 
-It brings to VisiData the idea behind MotherDuck's [`prompt_jev()`](https://motherduck.com/docs/sql-reference/motherduck-sql-reference/ai-functions/prompt-jev/) SQL function.
+Several tools for structured data are starting to offer decision models: language models that do not write text, but answer a closed question with a typed value and a confidence. We thought it would be useful to have this in VisiData too; among what we have seen, MotherDuck's [`prompt_jev()`](https://motherduck.com/docs/sql-reference/motherduck-sql-reference/ai-functions/prompt-jev/) SQL function looked very interesting to us.
 
 **Your data leaves your computer.** The text of every cell you ask about is sent to OpenRouter and from there to the servers of the provider of the chosen model (TypeSafe, in the United States, for the default Jev). Use it on data you are allowed to share with them; see [Privacy](#privacy).
 
