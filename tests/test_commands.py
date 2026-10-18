@@ -42,7 +42,7 @@ def textsheet(*texts):
 
 
 def ask(sheet, question='q?', answers=''):
-    sheet.jevAsk(sheet.column('text'), sheet.rows, question, answers)
+    sheet.jev_column(sheet.column('text'), sheet.rows, question, answers)
     vd.sync()
     return {c.name: [c.getValue(r) for r in sheet.rows] for c in sheet.columns}
 
@@ -121,7 +121,7 @@ def test_error_row(jev):
 def test_invalid_input_fails_before_anything(jev, question, answers, message):
     sheet = textsheet('a')
     with pytest.raises(ExpectedException, match=message):
-        sheet.jevAsk(sheet.column('text'), sheet.rows, question, answers)
+        sheet.jev_column(sheet.column('text'), sheet.rows, question, answers)
     assert len(sheet.columns) == 2
     assert jev.requests == []
 
@@ -130,14 +130,14 @@ def test_missing_key_fails_before_anything(jev, monkeypatch):
     monkeypatch.delenv('OPENROUTER_API_KEY')
     sheet = textsheet('a')
     with pytest.raises(ExpectedException, match='OPENROUTER_API_KEY'):
-        sheet.jevAsk(sheet.column('text'), sheet.rows, 'q?', '')
+        sheet.jev_column(sheet.column('text'), sheet.rows, 'q?', '')
     assert len(sheet.columns) == 2
 
 
 def test_no_rows(jev):
     sheet = textsheet('a')
     with pytest.raises(ExpectedException, match='no rows selected'):
-        sheet.jevAsk(sheet.column('text'), [], 'q?', '')
+        sheet.jev_column(sheet.column('text'), [], 'q?', '')
 
 
 def test_confirm_in_main_thread(jev, monkeypatch):
@@ -160,13 +160,13 @@ def test_cancel_stops_pending_requests(jev):
         jev.reply({'answers': {'answer': {'type': 'noul', 'noul': 0.5}}}, delay=0.2)
     sheet = textsheet(*'abcdefghij')
     vd.options.jev_confirm_rows = 100
-    sheet.jevAsk(sheet.column('text'), sheet.rows, 'q?', '')
+    sheet.jev_column(sheet.column('text'), sheet.rows, 'q?', '')
     time.sleep(0.5)
-    vd.cancelThread(*[t for t in vd.unfinishedThreads if t.name.startswith('jevRun')])
+    vd.cancelThread(*[t for t in vd.unfinishedThreads if t.name.startswith('_jev_run')])
     vd.sync()
     time.sleep(0.3)  # let an in-flight request finish
     assert len(jev.requests) < 10
-    assert any(s.startswith('jev noul: ') for s in jev.statuses)  # partial summary, then VisiData's `jevRun aborted`
+    assert any(s.startswith('jev noul: ') for s in jev.statuses)  # partial summary, then VisiData's `_jev_run aborted`
 
 
 def test_menu():

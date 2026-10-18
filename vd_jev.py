@@ -263,7 +263,7 @@ def inputJev(vd):
 
 
 @Sheet.api
-def jevAsk(sheet, col, rows, question='', answers=''):
+def jev_column(sheet, col, rows, question='', answers=''):
     'Ask the decision model *question* about the text of *col* in each of *rows*; add the answers as new columns.'
     try:
         kind, labels, descriptions = jev_parse_answers(answers)
@@ -297,12 +297,12 @@ def jevAsk(sheet, col, rows, question='', answers=''):
     if col in sheet.visibleCols:  # stay on the text column, ready for the next question
         sheet.cursorVisibleColIndex = sheet.visibleCols.index(col)
 
-    sheet.jevRun(todo, q, labels, api_key, len(rows)-len(todo), valuecol, confcol, probcol, rawcol)
+    sheet._jev_run(todo, q, labels, api_key, len(rows)-len(todo), valuecol, confcol, probcol, rawcol)
 
 
 @Sheet.api
 @asyncthread
-def jevRun(sheet, todo, question, labels, api_key, nskipped, valuecol, confcol, probcol, rawcol):
+def _jev_run(sheet, todo, question, labels, api_key, nskipped, valuecol, confcol, probcol, rawcol):
     'Send one request per (row, text) in *todo*, *jev_concurrency* at a time, and fill the result columns.'
     args = (question, api_key, vd.options.jev_model, vd.options.jev_api_url, vd.options.jev_timeout)
     answered = errors = 0
@@ -358,9 +358,9 @@ def jevRun(sheet, todo, question, labels, api_key, nskipped, valuecol, confcol, 
 
 
 # no default keybindings, as in experimental/llm.py
-Sheet.addCommand('', 'jev-column', 'jevAsk(cursorCol, rows, **vd.inputJev())',
+Sheet.addCommand('', 'jev-column', 'jev_column(cursorCol, rows, **vd.inputJev())',
     'ask a decision model a closed question about every row of current column; add the answers as new columns')
-Sheet.addCommand('', 'jev-selected', 'jevAsk(cursorCol, someSelectedRows, **vd.inputJev())',
+Sheet.addCommand('', 'jev-selected', 'jev_column(cursorCol, someSelectedRows, **vd.inputJev())',
     'ask a decision model a closed question about selected rows of current column; add the answers as new columns')
 
 vd.addMenuItems('''

@@ -25,7 +25,7 @@ sheet.ensureLoaded(); vd.sync()
 results = {}
 for name, answers in [('plain', PLAIN), ('described', DESCRIBED)]:
     t0 = time.time()
-    sheet.jevAsk(sheet.column('objective'), sheet.rows, QUESTION, answers)
+    sheet.jev_column(sheet.column('objective'), sheet.rows, QUESTION, answers)
     vd.sync()
     print(name, round(time.time() - t0, 1), 's |', [s for s in statuses if s.startswith('jev ')][-1], flush=True)
     valuecol = [c for c in sheet.columns if c.name == 'objective_choice'][0]

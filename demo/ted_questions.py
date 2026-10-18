@@ -23,7 +23,7 @@ summary = []
 for colname, question, answers in QUESTIONS:
     col = sheet.column(colname)
     t0 = time.time()
-    sheet.jevAsk(col, sheet.rows, question, answers)
+    sheet.jev_column(col, sheet.rows, question, answers)
     vd.sync()
     secs = round(time.time() - t0, 1)
     last = [s for s in statuses if s.startswith('jev ')][-1]
