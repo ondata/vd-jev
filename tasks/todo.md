@@ -34,7 +34,8 @@ A VisiData plugin that brings the ideas of MotherDuck's `prompt_jev()` into Visi
   - Done 2026-10-18. `uv run pytest`: 30 tests in `tests/test_client.py` pass (loopback server in `tests/conftest.py`). `uv run pytest -m live`: 3 passed. Real answers for the fallen-tree sentence: noul 0.98; choice `roads` (confidence 0.99); score 1.98 of 2 (confidence 0.98); about 0.000013 USD per call. Confirms `null` label descriptions for choice and an array of levels for score are accepted.
 - [x] VisiData options: `jev_model` (default `typesafe/jev-1.14`), `jev_api_url`, `jev_concurrency`, `jev_confirm_rows` (row count above which it asks for confirmation), `jev_timeout` → check: they appear in `Shift+O` (checked by `tests/options-nosave.vdx`, `assert-expr` on `vd.options`, run from pytest; a deliberately failing assertion makes the run fail)
   - Done 2026-10-18. `tests/test_vdx.py` replays every `tests/*.vdx` with `--batch --config /dev/null --visidata-dir <tmp>`; `options-nosave.vdx` checks the five defaults and their presence on the `options-global` (Shift+O) sheet; `test_failing_assert_fails` guards against vacuous passes.
-- [ ] GitHub Actions workflow: `uv run pytest` on Python 3.10 to 3.14 → check: workflow green on the push
+- [x] GitHub Actions workflow: `uv run pytest` on Python 3.10 to 3.14 → check: workflow green on the push
+  - Done 2026-10-18, `.github/workflows/test.yml` (`actions/checkout@v7`, `astral-sh/setup-uv@v10.3.0`, `uv run --locked pytest`); run 39118684186 on `d190e37` green on 3.10, 3.11, 3.12, 3.13, 3.14.
 
 ## Phase 3 - VisiData commands
 
