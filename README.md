@@ -18,6 +18,7 @@ It brings to VisiData the idea behind MotherDuck's [`prompt_jev()`](https://moth
 - [What it does](#what-it-does)
 - [A real example: EU public procurement](#ted)
 - [A larger test: EU research projects](#cordis)
+- [Checking official data](#quality)
 - [Choosing a model](#choosing-a-model)
 - [Cost](#cost)
 - [Privacy](#privacy)
@@ -206,6 +207,26 @@ One question on the `objective` column, 1,000 rows, about 45 seconds and 0.03 US
 Confidence separates the answers to trust from those to read: with descriptions, 825 answers have a confidence of 0.8 or more and 85% of them match CORDIS; the 175 below 0.8 match only about half of the time.
 
 Most disagreements are on the line between natural sciences and engineering (73 projects CORDIS puts in natural sciences, the model in engineering), and the reference is not always right either: "Efficient and Eco-friendly Construction Of Revolutionary surfboard blanKs" is filed by CORDIS under astronomy and planetary sciences, and by the model under engineering (confidence 1.00). In CORDIS, 30 of the 1,000 projects are flagged as human-validated; what the flag covers is not documented.
+
+<a id="quality"></a>
+## Checking official data
+
+The same columns turn the plugin into a data quality check. When the model is very sure and the official classification says something else, the row is worth a look. In VisiData, on the CORDIS sample after the question with descriptions:
+
+```
+z|   objective_choice != field and objective_choice_conf >= 0.95
+```
+
+selects 85 of the 1,000 projects. Reading them, some official labels are hard to defend, and each one seems to come from a single word of the objective taken out of context:
+
+| Project | Field of science in CORDIS | Word in the objective | Plugin |
+|---|---|---|---|
+| [Pulsehaler](https://cordis.europa.eu/project/id/968565), a device to treat COPD | sociology / demography / mortality | "kills 160,000 every year" | medical and health sciences (1.00) |
+| [e2CORK](https://cordis.europa.eu/project/id/673635), surfboard blanks made of cork | astronomy / planetary sciences / planets | "carbon footprint on our planet" | engineering and technology (1.00) |
+| [HYPERNEX](https://cordis.europa.eu/project/id/101015145), a European hyperloop network | ecology / ecosystems; catalysis | "the need for a catalyst", "R&D ecosystem" | engineering and technology (1.00) |
+| [ACROBA](https://cordis.europa.eu/project/id/101017284), cognitive robots for production lines | ecology / ecosystems | "production environments" | engineering and technology (0.98) |
+
+Not every selected row is an error in the official data: in others the model is wrong, or the project sits between two fields. The selection is a short list to read instead of 1,000 rows, and what survives the reading is something to send to the publisher, with the links.
 
 <a id="choosing-a-model"></a>
 ## Choosing a model
