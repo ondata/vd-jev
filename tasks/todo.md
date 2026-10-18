@@ -12,9 +12,12 @@ A VisiData plugin that brings the ideas of MotherDuck's `prompt_jev()` into Visi
 
 ## Phase 1 - Repo skeleton
 
-- [ ] `git init`, `.gitignore` (`tmp/`), `README.md`, `LOG.md`, `LICENSE` (GPL-3.0-only, same as VisiData) → check: clean `git status` after the first commit
-- [ ] `pyproject.toml` with entry point `[project.entry-points."visidata.plugins"] jev = "vd_jev"` and a `requests` dependency → check: `uv build` produces a wheel without errors
-- [ ] Install into VisiData's environment with `uv tool install visidata --reinstall --with-editable ~/git/vd-jev` plus all 10 current extras (`humanize pyarrow fuzzywuzzy python-levenshtein duckdb sqlite-utils openpyxl requests pyshp pyyaml`) → check: `uv tool list --show-with` lists all 11, and `vd` starts without a `plugin jev failed to load` warning
+- [x] `git init`, `.gitignore` (`tmp/`), `README.md`, `LOG.md`, `LICENSE` (GPL-3.0-only, same as VisiData) → check: clean `git status` after the first commit
+  - Done 2026-10-18, commit `Repo skeleton`; `git status --short` empty. `.gitignore` also covers `__pycache__/`, `*.egg-info/`, `dist/`, `.venv/`. `LICENSE` is the FSF text from `/usr/share/common-licenses/GPL-3` (VisiData's copy differs only in `http` vs `https` URLs).
+- [x] `pyproject.toml` with entry point `[project.entry-points."visidata.plugins"] jev = "vd_jev"` and a `requests` dependency → check: `uv build` produces a wheel without errors
+  - Done 2026-10-18, hatchling backend, SPDX `license = "GPL-3.0-only"`. `uv build -o tmp/dist` builds sdist and wheel; wheel `entry_points.txt` holds `[visidata.plugins] jev = vd_jev`.
+- [x] Install into VisiData's environment with `uv tool install visidata --reinstall --with-editable ~/git/vd-jev` plus all 10 current extras (`humanize pyarrow fuzzywuzzy python-levenshtein duckdb sqlite-utils openpyxl requests pyshp pyyaml`) → check: `uv tool list --show-with` lists all 11, and `vd` starts without a `plugin jev failed to load` warning
+  - Done 2026-10-18. Extras checked first in `uv-receipt.toml` (same 10). `uv tool list --show-with` shows the 10 extras plus `vd-jev` (editable). `vd -b tmp/x.csv -o tmp/out.csv` exits 0 with no output; replay `tmp/check_plugin.vdj` (`exec-python`) shows `sys.modules['visidata.plugins.jev']` = `vd_jev` from `~/git/vd-jev/vd_jev/__init__.py`.
 
 ## Phase 2 - Jev client
 
