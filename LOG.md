@@ -2,6 +2,8 @@
 
 ## 2026-10-18
 
+- Phase 4, real calls on the demo (Jev 1.14, Decisions API): hazard 0.97 / 0.04 / 0.16; department `roads` 0.98 / `parks` 1.00 / `noise` 1.00; urgency 1.96 (conf 0.94) / 0.11 (0.85) / 0.91 (0.19) for tree / bench / bar; empty row skipped. The bar's urgency is the uncertain case to show.
+- Guide for the manual test verified as `tests/guide-nosave.vdx`; `go-col-regex` searches forward and `select-expr` lets empty cells pass `< x`.
 - Default endpoint switched to OpenRouter Decisions API (`/api/alpha/decisions`), Jev 1.14 default model, any decision model via `jev_model`; messages name OpenRouter and the model, not Jev. `uv run pytest -m live` passes on the new endpoint. Demo approved.
 - Phase 3: two commands, `jev-column` and `jev-selected`, one form (`question`, `answers`); the type comes from `answers` (empty = noul, `a, b, c` = choice, `a < b < c` = score), as in MotherDuck `prompt_jev()`. Demo cut to 4 rows. 60 tests pass (`uv run pytest`): unit, in-process commands, `.vdx` replays with golden files.
 - OpenRouter Decisions API (`/api/alpha/decisions`) takes the same body as System One and serves 27 decision models (live catalog `?output_modalities=decisions`); real check: Jev 1.14 0.97 / `roads` / 1.98 at ~0.000013 USD, Perplexity Decider Flash 1.2 0.97 / `roads` / 1.54 at ~0.000001 USD.

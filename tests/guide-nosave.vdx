@@ -1,0 +1,22 @@
+# the steps of the guided manual test, as longnames: if this breaks, the guide is wrong
+# answers come from the loopback fake in tests/conftest.py (deterministic_answer), not from Jev
+open-file demo/city_requests.csv
+go-col-regex ^message$
+assert-expr cursorCol.name == 'message'
+jev-column {"question": "Does the message report a safety hazard?", "answers": ""}
+assert-expr cursorCol.name == 'message_noul'
+go-col-regex ^message$
+jev-column {"question": "Which department should handle this?", "answers": "roads, parks, noise"}
+assert-expr cursorCol.name == 'message_choice'
+assert-expr [c.name for c in visibleCols] == ['id', 'district', 'message', 'message_choice', 'message_choice_conf', 'message_noul']
+freq-col
+assert-expr sheet.nRows == 3
+quit-sheet
+go-col-regex ^message$
+jev-column {"question": "How urgent is this request?", "answers": "low < medium < high"}
+assert-expr cursorCol.name == 'message_score'
+go-right
+assert-expr cursorCol.name == 'message_score_conf'
+sort-asc
+select-expr 0 < message_score_conf < 0.85
+assert-expr sheet.nSelectedRows == 3

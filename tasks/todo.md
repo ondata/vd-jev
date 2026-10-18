@@ -54,8 +54,10 @@ Decided with the user on 2026-10-18: the question type comes from what the user 
 
 ## Phase 4 - Field test
 
-- [ ] Run the three kinds of question on `demo/city_requests.csv` with real calls → check: answers and cost recorded in `LOG.md`
+- [x] Run the three kinds of question on `demo/city_requests.csv` with real calls → check: answers and cost recorded in `LOG.md`
+  - Done 2026-10-18, `tests/demo-{noul,choice,score}.vdx` in batch on the Decisions API with Jev 1.14, see LOG. Cost not printed in batch; 9 calls at ~0.000013 USD each (from the live tests), ~0.00012 USD.
 - [ ] Guided interactive test with the user in their shell, step by step, on a guide whose every step was verified beforehand
+  - Guide steps verified 2026-10-18: keys in the VisiData 3.4 source (`Space` exec-longname, `c` go-col-regex, `Tab` next form field, `F` freq-col, `q` quit-sheet, `l` go-right, `[` sort-asc, `z|` select-expr, `gq` quit-all) and the whole sequence as `tests/guide-nosave.vdx`. Found while checking: the cursor moves to the new column after `jev-column`; `go-col-regex` searches forward, so the guide uses `^message$`; in `select-expr` an empty cell passes `< 0.5`, so the guide uses `0 < message_score_conf < 0.5`.
 
 ## Phase 5 - Publication
 
