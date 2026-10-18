@@ -8,7 +8,9 @@ It brings to VisiData the idea behind MotherDuck's [`prompt_jev()`](https://moth
 
 **Your data leaves your computer.** The text of every cell you ask about is sent to OpenRouter and from there to the servers of the provider of the chosen model (TypeSafe, in the United States, for the default Jev). Use it on data you are allowed to share with them; see [Privacy](#privacy).
 
-![vd-jev demo: three questions on ten citizen requests, a frequency table, and the uncertain rows selected](demo/demo.gif)
+**Click the animation to open it full size, where the text is easier to read.**
+
+[![vd-jev demo: three questions on ten citizen requests, a frequency table, and the uncertain rows selected](demo/demo.gif)](https://raw.githubusercontent.com/ondata/vd-jev/main/demo/demo.gif)
 
 ## Contents
 
