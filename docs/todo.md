@@ -60,6 +60,16 @@ Decided with the user on 2026-10-18: the question type comes from what the user 
   - Guide steps verified 2026-10-18: keys in the VisiData 3.4 source (`Space` exec-longname, `c` go-col-regex, `Tab` next form field, `F` freq-col, `q` quit-sheet, `l` go-right, `[` sort-asc, `z|` select-expr, `gq` quit-all) and the whole sequence as `tests/guide-nosave.vdx`. Found while checking: the cursor moves to the new column after `jev-column`; `go-col-regex` searches forward, so the guide uses `^message$`; in `select-expr` an empty cell passes `< 0.5`, so the guide uses `0 < message_score_conf < 0.5`.
   - Done 2026-10-18 with the user, Windows Terminal, screenshots. All three types worked on real calls (~0.000012-0.000013 USD per row); status summary shown in the `statuses` box; the bar row was the only one selected (urgency 0.91, confidence 0.17). Found: the user asked the urgency question while the cursor was still on `message_choice`, because the plugin moves the cursor to the new column; proposal: keep the cursor on the source column.
 
+## Phase 4b - Batching experiment (2026-10-18, asked by the user)
+
+Why: one row per request costs ~0.000012 USD/row with Jev, ~290 input tokens, while a demo message is ~20 tokens; most of the cost looks like a fixed per-request overhead (inferred, not measured). MotherDuck batches 32 rows per request.
+
+- [x] Build a batched request: `state = {"rows": [...]}`, one question per row (`r0`, `r1`, ...) whose instructions point at `rows[i]`; check live that the Decisions API accepts it → check: HTTP 200, one answer per row, each in the right shape
+  - Done 2026-10-18 (`tmp/batch_probe.py`): 3 rows, 3 correct `choice` answers, 450 input tokens, 0.0000189 USD.
+- [x] Run the three demo questions with batch sizes 1 (current format), 5, 9 (all demo rows), and ~27 (demo messages repeated 3 times) → check: per-row cost from `usage.cost`, wall time, and for each row the label / probability compared with batch size 1; results in `LOG.md`
+  - Done 2026-10-18 (`tmp/batch_exp.py`, `tmp/batch_exp.json`), see LOG.
+- [ ] Decide with the user: keep one row per request, or add `jev_batch_size` with a default chosen on the numbers
+
 ## Phase 5 - Publication
 
 - [x] Create `aborruso/vd-jev` on GitHub (private) and push → check: `gh repo view` shows it private, `main` pushed
