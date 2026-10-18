@@ -1,5 +1,5 @@
 'Run the TED example questions through the plugin with real calls (about 0.03 USD); see README, A real example.'
-import csv, curses, json, sys, time
+import csv, curses, json, os, sys, time
 sys.path.insert(0, '.')
 import visidata
 from visidata import vd
@@ -30,6 +30,7 @@ for colname, question, answers in QUESTIONS:
     summary.append(dict(column=colname, question=question, answers=answers, seconds=secs, status=last))
     print(secs, 's |', last, flush=True)
 
+os.makedirs('tmp/ted', exist_ok=True)
 cols = [c for c in sheet.columns]
 with open('tmp/ted/ted_answers.csv', 'w', newline='') as f:
     w = csv.writer(f)
