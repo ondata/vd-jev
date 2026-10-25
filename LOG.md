@@ -1,5 +1,9 @@
 # Log
 
+## 2026-10-25
+
+- README "Choosing a model": link to llm-openrouter-decisions, the LLM plugin for the same models.
+
 ## 2026-10-18
 
 - Repo metadata: GitHub description and 12 topics set; `pyproject.toml` description aligned with GitHub, `keywords` added.

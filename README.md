@@ -285,6 +285,8 @@ or press `Shift+O` inside VisiData, or start it with `vd --jev-model=perplexity/
 
 Probabilities and confidences are not comparable across models: a threshold that works with one model has to be checked again with another.
 
+To use the same models from the command line, outside VisiData, see [llm-openrouter-decisions](https://github.com/aborruso/llm-openrouter-decisions), a plugin for [LLM](https://llm.datasette.io/).
+
 <a id="cost"></a>
 ## Cost
 
