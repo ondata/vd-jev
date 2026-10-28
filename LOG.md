@@ -1,5 +1,9 @@
 # Log
 
+## 2026-10-28
+
+- VisiData v3.5 (GitHub only, not yet on PyPI): suite run against it, 73 passed, 2 failed (`demo-choice`, `demo-score` goldens) only because dict cells now save as JSON (#2944). Plugin compatible; lock and goldens to update when 3.5 reaches PyPI: https://github.com/ondata/vd-jev/issues/1
+
 ## 2026-10-25
 
 - README "Choosing a model": link to llm-openrouter-decisions, the LLM plugin for the same models.
